@@ -3,7 +3,15 @@
 #include "BallTree.h"
 #include "Utility.h"
 
-//#define YAHOO
+#define Netflix
+
+#ifdef Netflix
+char dataset[L] = "Netflix";
+int n = 17770;
+int	d = 50;
+int qn = 1000;
+#endif // Netflix
+
 
 #ifdef MNIST
 char dataset[L] = "Mnist";
@@ -22,11 +30,7 @@ int main() {
 	char index_path[L], output_path[L];
 	float** data = nullptr;
 	float** query = nullptr;
-
-	int n = 17770;
-	int	d = 50;
-	char datasett[L] = "C:/Users/bytrain/Desktop/project-3/Netflix";
-	sprintf(data_path, "%s/src/dataset.txt", datasett);
+	sprintf(data_path, "%s/src/dataset.txt", dataset);
 
 	//sprintf(query_path, "%s/src/query.txt", dataset);
 	//sprintf(index_path, "%s/index", dataset);
