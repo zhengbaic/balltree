@@ -8,10 +8,9 @@ public:
 	ball* leftball;
 	ball* rightball;
 
-	float* CircleCenter;//Բ��
-	float radius;//�뾶
+	float* CircleCenter;//Ô²ÐÄ
+	float radius;//°ë¾¶
 	int bid;
-	float** data;
 	ball() {
 		radius = 0;
 		bid = -1;
