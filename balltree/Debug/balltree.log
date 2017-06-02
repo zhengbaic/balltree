@@ -1,0 +1,11 @@
+﻿  BallTree.cpp
+  正在生成代码...
+  正在编译...
+  test.cpp
+c:\users\bytrain\documents\visual studio 2015\projects\balltree\balltree\test.cpp(22): warning C4101: “output_path”: 未引用的局部变量
+c:\users\bytrain\documents\visual studio 2015\projects\balltree\balltree\test.cpp(22): warning C4101: “index_path”: 未引用的局部变量
+c:\users\bytrain\documents\visual studio 2015\projects\balltree\balltree\test.cpp(21): warning C4101: “query_path”: 未引用的局部变量
+  Utility.cpp
+  正在生成代码...
+  balltree.vcxproj -> C:\Users\bytrain\documents\visual studio 2015\Projects\balltree\Debug\balltree.exe
+  balltree.vcxproj -> C:\Users\bytrain\documents\visual studio 2015\Projects\balltree\Debug\balltree.pdb (Partial PDB)
