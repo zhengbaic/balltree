@@ -40,7 +40,7 @@ bool BallTree::buildTree(int n, int d, float **data) {
 	return true;
 }
 
-void BallTree::buildBall(ball* node, int n, int d, float **data) {
+void BallTree::buildBall(ball* &node, int n, int d, float **data) {
 	node = new ball();
 	Analyse(node, n, d, data);//得到圆心根半径（Utility.cpp）
 	printf("半径 ： %f \n", node->radius);

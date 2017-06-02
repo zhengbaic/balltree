@@ -17,7 +17,7 @@ public:
 		int d,
 		float** data);
 
-	void buildBall(ball *node, int n, int d, float **data);
+	void buildBall(ball *&node, int n, int d, float **data);
 
 	bool storeTree(
 		const char* index_path);

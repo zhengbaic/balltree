@@ -40,7 +40,7 @@ int main() {
 	}
 	BallTree ball_tree1;
 	ball_tree1.buildTree(n, d, data);
-
+	cout << "11" << endl;
 	/*ball_tree1.buildTree(n, d, data);
 	ball_tree1.storeTree(index_path);
 
