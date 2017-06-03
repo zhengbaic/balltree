@@ -1,17 +1,6 @@
-#include <cstdio>
-#include <cmath>
-#include <algorithm>
-#include<vector>
-
 #include "Utility.h"
 
-using namespace std;
-
-bool read_data(
-	int n,//个数
-	int d,//维度
-	float** &data, //数据集
-	const char* file_name)
+bool read_data(int n, int d, float** &data, const char* file_name)
 {
 	FILE* fin = fopen(file_name, "r");
 	if (!fin) {
@@ -63,6 +52,7 @@ void Analyse(ball *node, int n, int d, float **data) {
 
 	node->radius = sqrt(r);
 }
+
 float* FindFurestPoint(float** data, float * po, int n, int d) {
 	float* res = new float[d] {.0f};
 	float max = 0;
@@ -75,6 +65,7 @@ float* FindFurestPoint(float** data, float * po, int n, int d) {
 	}
 	return res;
 }
+
 void Split(int n , int d, float* &a, float* &b, float** data) {
 	float* randomPoint = data[0];
 	a = new float[d] {.0f};
@@ -82,7 +73,6 @@ void Split(int n , int d, float* &a, float* &b, float** data) {
 	a = FindFurestPoint(data, randomPoint, n, d);
 	b = FindFurestPoint(data, a, n, d);
 }
-
 
 float** VectorToFloat(vector<float*> v) {
 	int size = v.size();
@@ -93,3 +83,18 @@ float** VectorToFloat(vector<float*> v) {
 	return res;
 }
 
+void outputfloat2(float** f, int n, int d) {
+	for (int i = 0; i < n; i++) {
+		for (int j = 0; j < d; j++) {
+			printf("%f", f[i][j]);
+		}
+	}
+}
+
+void displayCenter(float* f, int d) {
+	cout << "圆心：[";
+	for (int i = 0; i < d; i++) {
+		printf("%f ,", f[i]);
+	}
+	cout << "]" << endl;
+}

@@ -1,17 +1,24 @@
 #ifndef __UTILITY_H
 #define __UTILITY_H
-#include<vector>
-#define L 256
+
+#include <vector>
+#include <cstdio>
+#include <cmath>
+#include <algorithm>
+#include <iostream>
+#define L 20
 using namespace std;
-class ball {
-public:
+
+struct ball {
 	ball* leftball;
 	ball* rightball;
-
-	float* CircleCenter;//Ô²ÐÄ
-	float radius;//°ë¾¶
+	int datanum;
+	float* CircleCenter;
+	float radius;
 	int bid;
+
 	ball() {
+		datanum = -1;
 		radius = 0;
 		bid = -1;
 		leftball = rightball = NULL;
@@ -19,12 +26,21 @@ public:
 };
 
 void Analyse(ball *node, int n, int d, float **data);
-bool read_data(
-	int n,
-	int d,
-	float** &data,
-	const char* file_name);
+
+bool read_data(int n, int d, float** &data, const char* file_name);
+
 void Split(int n, int d, float* &a, float* &b, float** data);
+
 float getDistanse(float* a, float *b, int d);
+
 float** VectorToFloat(vector<float*> v);
+
+void outputfloat2(float** f, int n, int d);
+
+void displayCenter(float* f, int d);
+
+void insertOnePointAndUpdateNode(ball *b, float *data) {
+	
+}
+
 #endif

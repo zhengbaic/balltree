@@ -12,7 +12,6 @@ int	d = 50;
 int qn = 1000;
 #endif // Netflix
 
-
 #ifdef MNIST
 char dataset[L] = "Mnist";
 int n = 600, d = 50;
@@ -30,17 +29,18 @@ int main() {
 	char index_path[L], output_path[L];
 	float** data = nullptr;
 	float** query = nullptr;
-	sprintf(data_path, "%s/src/dataset.txt", dataset);
 
-	//sprintf(query_path, "%s/src/query.txt", dataset);
-	//sprintf(index_path, "%s/index", dataset);
-	//sprintf(output_path, "%s/dst/answer.txt", dataset);
+	sprintf(data_path, "%s/src/dataset.txt", dataset);
+	sprintf(query_path, "%s/src/query.txt", dataset);
+	sprintf(index_path, "%s/index", dataset);
+	sprintf(output_path, "%s/dst/answer.txt", dataset);
+
 	if (!read_data(n, d, data, data_path)) {
 		return 1;
 	}
+
 	BallTree ball_tree1;
 	ball_tree1.buildTree(n, d, data);
-	cout << "11" << endl;
 	/*ball_tree1.buildTree(n, d, data);
 	ball_tree1.storeTree(index_path);
 
