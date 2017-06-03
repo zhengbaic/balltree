@@ -7,6 +7,9 @@ using namespace std;
 
 static int bid = 0;
 map<int, float**> storage;
+float getMax(int d, float* query, ball* Root);
+float getLength(int d, float* query);
+float getInnerproduct(int d, float * query, float * vec);
 
 void outputfloat2(float** f, int n, int d) {
 	for (int i = 0; i < n; i++) {
@@ -73,4 +76,58 @@ void BallTree::buildBall(ball* &node, int n, int d, float **data) {
 		buildBall(node->leftball, leftd.size(), d, leftdata);
 		buildBall(node->rightball, rightd.size(), d, rightdata);
 	}
+}
+
+int BallTree::mipSearch(int d,float* query) {
+	float Max = 0;
+	Max = eval(d, query, Max, root->leftball);
+	if (Max < getMax(d,query, root->rightball)) {
+		eval(d, query, Max, root->rightball);
+	}
+	return target_bid;
+}
+
+float BallTree::eval(int d, float* query, float Max,ball* Root) {
+	float temp;
+	if (Root->leftball == NULL && Root->rightball == NULL) {
+		for (int i = 0; i <= sizeof(storage[Root->bid]) / sizeof(float) / d; i++) {
+			temp = getInnerproduct(d, query, storage[Root->bid][i]);
+			if (Max < temp) {
+				Max = temp;
+				target_bid = Root->bid;
+			}
+		}
+		return Max;
+	}
+	Max = eval(d,query,Max, Root->leftball);
+	if (Max < getMax(d, query, Root->rightball)) {
+		Max = eval(d,query,Max, Root->rightball);
+	}
+	return Max;
+}
+
+float getMax(int d,float* query, ball* Root) {
+	float Max = 0;
+	for (int i = 0; i < d; i++) {
+		Max += Root->CircleCenter[i] * query[i];
+	}
+	Max += Root->radius * getLength(d,query);
+	return Max;
+}
+
+float getLength(int d, float* query) {
+	float Length = 0;
+	for (int i = 0; i < d; i++) {
+		Length += pow(query[i], 2);
+	}
+	Length = sqrt(Length);
+	return Length;
+}
+
+float getInnerproduct(int d, float * query, float * vec) {
+	float Innerproduct = 0;
+	for (int i = 0; i < d; i++) {
+		Innerproduct += query[i] * vec[i];
+	}
+	return Innerproduct;
 }

@@ -6,6 +6,7 @@
 class BallTree {
 public:
 	static int bid;
+	int target_bid;
 	int dimesion;//Î¬¶È
 	int num; //ÊýÁ¿
 	ball *root;
@@ -28,6 +29,8 @@ public:
 	int mipSearch(
 		int d,
 		float* query);
+
+	float eval(int d, float* query, float Max, ball* Root);
 
 	// optional
 	bool insertData(
