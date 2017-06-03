@@ -1,6 +1,6 @@
-/.get/
-/.vs/
-/Debug/
-/x64/
-/balltree/Debug/
-/balltree/x64/
+.git/
+.vs/
+Debug/
+x64/
+balltree/Debug/
+balltree/x64/
