@@ -1,4 +1,5 @@
 #include "Utility.h"
+#include<set>
 
 bool read_data(int n, int d, float** &data, const char* file_name)
 {
@@ -53,6 +54,27 @@ void Analyse(ball *node, int n, int d, float **data) {
 	node->radius = sqrt(r);
 }
 
+void QuadAnalyse(Quadball *node, int n, int d, float **data) {
+	float* mean = new float[d] {.0f};
+	for (int i = 0; i < n; i++) {
+		for (int j = 0; j < d; j++) {
+			mean[j] += data[i][j];
+		}
+	}
+	for (int i = 0; i < d; i++) {
+		mean[i] /= n;
+	}
+
+	node->CircleCenter = mean;
+
+	float r = 0;
+	for (int i = 0; i < n; i++) {
+		r = max(r, getDistanse(mean, data[i], d));
+	}
+
+	node->radius = sqrt(r);
+}
+
 float* FindFurestPoint(float** data, float * po, int n, int d) {
 	float* res = new float[d] {.0f};
 	float max = 0;
@@ -65,13 +87,42 @@ float* FindFurestPoint(float** data, float * po, int n, int d) {
 	}
 	return res;
 }
-
+void FindFurestPoints(float** data, int n, int d, set<float*> s) {
+	for (int i = 0; i < n; i++) {
+		s.insert(FindFurestPoint(data, data[i], n, d));
+	}
+}
 void Split(int n , int d, float* &a, float* &b, float** data) {
 	float* randomPoint = data[0];
 	a = new float[d] {.0f};
 	b = new float[d] {.0f};
 	a = FindFurestPoint(data, randomPoint, n, d);
 	b = FindFurestPoint(data, a, n, d);
+}
+
+void QuadSplit(int n, int de, float* &a, float* &b, float* &c, float* &d, float** data, float* & mean) {
+	float* randomPoint = data[0];
+	a = new float[de] {.0f};
+	b = new float[de] {.0f};
+	c = new float[de] {.0f};
+	d = new float[de] {.0f};
+
+	a = FindFurestPoint(data, randomPoint, n, de);
+	b = FindFurestPoint(data, a, n, de);
+
+	set<float*> table;
+	FindFurestPoints(data,n, de, table);
+	set<float*>::iterator iter;
+	float min = 1000;
+	for (iter = table.begin(); iter != table.end(); iter++) {
+		float cur = getDistanse(*iter, a, de) - getDistanse(*iter, b, de);
+		if (cur < min) {
+			min = cur;
+			c = *iter;
+		}
+	}
+
+	d = FindFurestPoint(data, c, n, de);
 }
 
 float** VectorToFloat(vector<float*> v) {

@@ -22,6 +22,8 @@ private:
 
 	ball *root;
 
+	Quadball *Quadroot;
+
 	float page[FLOATS_PER_BLOCK];
 
 	float page_backup[FLOATS_PER_BLOCK];
@@ -55,26 +57,17 @@ public:
 	// @author: painterdrown
 	bool insertData(int d, float* data);
 
-	// @author painterdrown
-	bool deleteData(int d, float* data);
-
 	// @author bytrain
 	bool buildQuadTree(int n, int d, float** data);
-	
-	// @author 123zzj123
-	int mipSearch(int d, float* query);
+
+	// @author bytrain
+	void buildQuadBall(Quadball *&node, int n, int d, float **data);
 
 	// @author 123zzj123
 	float eval(int d, float* query, float Max, ball* Root);
 
 	// @author painterdrown
-	bool insertData(int d, float* data);
-
-	// @author painterdrown
 	bool deleteData(int d, float* data);
-
-	// @author bytrain
-	bool buildQuadTree(int n, int d, float** data);
 
 	// 按树的层次遍历并且输出
 	// @author painterdrown

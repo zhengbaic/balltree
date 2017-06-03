@@ -24,12 +24,28 @@ struct ball {
 		leftball = rightball = NULL;
 	}
 };
+struct Quadball {
+	Quadball* ball1;
+	Quadball* ball2;
+	Quadball* ball3;
+	Quadball* ball4;
+	float* CircleCenter;
+	float radius;
+	Quadball() {
+		radius = -1;
+		ball1 = ball2 = ball3 = ball4 = NULL;
+	}
+};
 
 void Analyse(ball *node, int n, int d, float **data);
+
+void QuadAnalyse(Quadball *node, int n, int d, float **data);
 
 bool read_data(int n, int d, float** &data, const char* file_name);
 
 void Split(int n, int d, float* &a, float* &b, float** data);
+
+void QuadSplit(int n, int de, float* &a, float* &b, float* &c, float* &d, float** data, float* & meanW);
 
 float getDistanse(float* a, float *b, int d);
 

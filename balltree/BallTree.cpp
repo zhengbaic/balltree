@@ -9,6 +9,7 @@ BallTree::BallTree() {
 	num = 0;
 	target_bid = -1;
 	root = NULL;
+	Quadroot = NULL;
 }
 
 BallTree::~BallTree() {}
@@ -60,7 +61,64 @@ void BallTree::buildBall(ball* &node, int n, int d, float **data) {
 		buildBall(node->rightball, rightd.size(), d, rightdata);
 	}
 }
-
+bool BallTree::buildQuadTree(int n, int d, float ** data)
+{
+	dimesion = d;
+	num = n;
+	printf("Building QuadTree ...\n");
+	buildQuadBall(Quadroot, n, d, data);
+	printf("Building QuadTree completed!\n");
+	//displayTree();
+	return true;
+}
+void BallTree::buildQuadBall(Quadball* &node, int n, int d, float **data) {
+	node = new Quadball();
+	QuadAnalyse(node, n, d, data);
+	if (n <= N0) {
+		//叶子
+	}
+	else {
+		float* A = NULL;
+		float* B = NULL;
+		float* C = NULL;
+		float* D = NULL;
+		QuadSplit(n, d, A, B, C, D, data, node->CircleCenter);
+		float ** data1;//A
+		float ** data2;//B
+		float ** data3;//C
+		float ** data4;//D
+		vector<float*> d1;
+		vector<float*> d2;
+		vector<float*> d3;
+		vector<float*> d4;
+		for (int i = 0; i < n; i++) {
+			float dis1 = getDistanse(A, data[i], d);
+			float dis2 = getDistanse(B, data[i], d);
+			float dis3 = getDistanse(C, data[i], d);
+			float dis4 = getDistanse(D, data[i], d);
+			if (dis1 == min(min(dis1, dis2), min(dis3, dis4))) {
+				d1.push_back(data[i]);
+			}
+			else if (dis2 == min(min(dis1, dis2), min(dis3, dis4))) {
+				d2.push_back(data[i]);
+			}
+			else if (dis3 == min(min(dis1, dis2), min(dis3, dis4))) {
+				d3.push_back(data[i]);
+			}
+			else if (dis4 == min(min(dis1, dis2), min(dis3, dis4))) {
+				d4.push_back(data[i]);
+			}
+		}
+		data1 = VectorToFloat(d1);
+		data2 = VectorToFloat(d2);
+		data3 = VectorToFloat(d3);
+		data4 = VectorToFloat(d4);
+		buildQuadBall(node->ball1, d1.size(), d, data1);
+		buildQuadBall(node->ball2, d2.size(), d, data1);
+		buildQuadBall(node->ball3, d3.size(), d, data1);
+		buildQuadBall(node->ball4, d4.size(), d, data1);
+	}
+}
 int BallTree::mipSearch(int d,float* query) {
 	float Max = 0;
 	Max = eval(d, query, Max, root->leftball);
@@ -171,14 +229,14 @@ bool BallTree::insertData(int d, float* point) {
 		if (distance > node->radius) {
 			node->radius = distance;
 		}
-		appendPointIntoBlock(point, node->bid);
+		//appendPointIntoBlock(point, node->bid);
 		node->datanum++;
 	} else {
-		splitToTwoCircles(node, point);
+		//splitToTwoCircles(node, point);
 		delete node;
 		// 从数据所在的页中读取出来
 		// 可以在搜索的时候就保存页面
-		buildBall(node, N0 + 1, dimesion, );
+		//buildBall(node, N0 + 1, dimesion, );
 	}
 
 	return true;
