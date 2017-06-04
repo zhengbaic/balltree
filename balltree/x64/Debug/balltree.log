@@ -1,8 +1,4 @@
-﻿  BallTree.cpp
-c:\users\bytrain\desktop\balltree\balltree\balltree.cpp(73): warning C4267: “参数”: 从“size_t”转换到“int”，可能丢失数据
-c:\users\bytrain\desktop\balltree\balltree\balltree.cpp(74): warning C4267: “参数”: 从“size_t”转换到“int”，可能丢失数据
-  正在生成代码...
-  正在跳过...(未检测到相关更改)
-  test.cpp
-  balltree.vcxproj -> C:\Users\bytrain\Desktop\balltree\x64\Debug\balltree.exe
-  balltree.vcxproj -> C:\Users\bytrain\Desktop\balltree\x64\Debug\balltree.pdb (Partial PDB)
+﻿  Utility.cpp
+e:\workspace\study\数据库\project3\balltree\balltree\utility.cpp(89): warning C4267: “初始化”: 从“size_t”转换到“int”，可能丢失数据
+  balltree.vcxproj -> E:\Workspace\Study\数据库\Project3\balltree\x64\Debug\balltree.exe
+  balltree.vcxproj -> E:\Workspace\Study\数据库\Project3\balltree\x64\Debug\balltree.pdb (Partial PDB)

@@ -2,17 +2,17 @@
 #include <cmath>
 #include <algorithm>
 #include<vector>
-
+#include<fstream>
+#include<stack>
+#include<iostream>
+#include<map>
+#include<sstream>
 #include "Utility.h"
+#include "BallTree.h"
 
 using namespace std;
 
-bool read_data(
-	int n,//个数
-	int d,//维度
-	float** &data, //数据集
-	const char* file_name)
-{
+bool read_data(int n, int d, float** &data, const char* file_name) {
 	FILE* fin = fopen(file_name, "r");
 	if (!fin) {
 		printf("%s doesn't exist!\n", file_name);
@@ -63,6 +63,7 @@ void Analyse(ball *node, int n, int d, float **data) {
 
 	node->radius = sqrt(r);
 }
+
 float* FindFurestPoint(float** data, float * po, int n, int d) {
 	float* res = new float[d] {.0f};
 	float max = 0;
@@ -75,6 +76,7 @@ float* FindFurestPoint(float** data, float * po, int n, int d) {
 	}
 	return res;
 }
+
 void Split(int n , int d, float* &a, float* &b, float** data) {
 	float* randomPoint = data[0];
 	a = new float[d] {.0f};
@@ -82,7 +84,6 @@ void Split(int n , int d, float* &a, float* &b, float** data) {
 	a = FindFurestPoint(data, randomPoint, n, d);
 	b = FindFurestPoint(data, a, n, d);
 }
-
 
 float** VectorToFloat(vector<float*> v) {
 	int size = v.size();
@@ -93,3 +94,173 @@ float** VectorToFloat(vector<float*> v) {
 	return res;
 }
 
+void openF(ball* root, map<int, float**> storage, const char* index_path) {
+	// 索引树文件
+	ofstream outFile;
+	string tempFileName = index_path;
+	tempFileName += "index.bin";
+	outFile.open(tempFileName, ios_base::out | ios_base::binary);
+	
+	// 数据文件
+	ofstream dataFile;
+	map<int, float**>::iterator mapIter;
+	int pageId = 0;							// 页号
+	int count = 0;							// 每页的数量
+	stringstream stream;
+	stream << pageId;
+	string temp;
+	stream >> temp;
+	string fileName = "page" + temp + ".bin";
+	tempFileName = index_path;
+	tempFileName += fileName;
+	dataFile.open(tempFileName, ios_base::out | ios_base::binary);
+
+	// 做一个点填补空项
+	float zeroPoint[50] = {0.0};
+	for (int i = 0; i < 50; i++) {
+		zeroPoint[i] = 0.0;
+	}
+
+	if (!outFile.is_open() || !dataFile.is_open()) {
+		exit(EXIT_FAILURE);
+	}
+
+	stack<ball*> Stack;
+	while (root || !Stack.empty()) {
+
+		while (root) {
+			Stack.push(root);
+			outFile.write((char*)&root, sizeof root);
+			
+			// 如果是叶子结点则写入硬盘中
+			if (root->leftball == NULL && root->rightball == NULL) {
+
+				count++;
+				// 分页并初始化
+				if (count >= 16) {
+					dataFile.close();
+					dataFile.clear();
+					count = 0;
+					pageId++;
+					stringstream stream;
+					stream << pageId;
+					string temp;
+					stream >> temp;
+					string fileName = "page" + temp + ".bin";
+					string tempFileName = index_path;
+					tempFileName += fileName;
+					dataFile.open(tempFileName, ios_base::out | ios_base::binary);
+					if (!dataFile.is_open()) {
+						exit(EXIT_FAILURE);
+					}
+				}
+
+				// 数据写入硬盘，不够位的用0点填补
+				mapIter = storage.find(root->bid);
+				if (mapIter != storage.end()) {
+					// dataFile.write((char*)&root->bid, sizeof root->bid);
+					for (int i = 0; i < root->datanum; i++) {
+						dataFile.write((char*)&mapIter->second[i], sizeof mapIter->second[0][0] * 50);
+						/*测试*/
+						for (int j = 0; j < 50; j++) {
+							cout << mapIter->second[i][j] << " ";
+						}
+						cout << endl;
+					}
+					for (int i = 0; i < 20 - root->datanum; i++) {
+						dataFile.write((char*)&zeroPoint, sizeof zeroPoint);
+						/*测试*/
+						/*for (int j = 0; j < 50; j++) {
+							cout << zeroPoint[j] << " ";
+						}
+						cout << endl;*/
+					}
+				}
+			}
+			root = root->leftball;
+		}
+		root = Stack.top();
+		Stack.pop();
+		root = root->rightball;
+	}
+	outFile.close();
+	dataFile.close();
+}
+
+void readF(ball* &root, const char* index_path) {
+	ifstream inFile;
+	string tempFileName = index_path;
+	tempFileName += "index.bin";
+	inFile.open(tempFileName, ios_base::in | ios_base::binary);
+	if (!inFile.is_open()) {
+		exit(EXIT_FAILURE);
+	}
+	inFile.read((char*)&root, sizeof root);
+	ball *head = root;
+	stack<ball*> Stack;
+	bool flag = false;
+	while (root || !Stack.empty()) {
+
+		while (root) {
+			Stack.push(root);
+			if (flag) {
+				inFile.read((char*)&root, sizeof root);
+			}
+			else {
+				flag = true;
+			}
+			root = root->leftball;
+		}
+		root = Stack.top();
+		Stack.pop();
+		root = root->rightball;
+	}
+	root = head;
+	inFile.close();
+
+	/*ifstream dataFile;
+	dataFile.open("page0.bin", ios_base::in | ios_base::binary);
+	if (!dataFile.is_open()) {
+		exit(EXIT_FAILURE);
+	}
+	
+
+	cout << endl << endl << endl << endl;
+	int count = 300;
+	while (count--) {
+		float *point = new float[50];
+		dataFile.read((char*)&point, sizeof 4 * 50);
+		if (point == NULL) {
+			cout << "此处是零点" << endl;
+		}
+		else {
+			for (int i = 0; i < 50; i++) {
+				cout << point[i] << " ";
+			}
+			cout << endl;
+		}
+		
+	}
+	dataFile.close();*/
+}
+
+void output(ball* root) {
+	stack<ball*> Stack;
+	while (root || !Stack.empty()) {
+
+		while (root) {
+			Stack.push(root);
+			cout << root->bid << " ";
+			cout << "圆心： [";
+			for (int i = 0; i < 50; i++) {
+				printf("%f ,", root->CircleCenter[i]);
+			}
+			cout << "]" << endl;
+			cout << " " << root->radius << endl;
+			root = root->leftball;
+		}
+		root = Stack.top();
+		Stack.pop();
+		root = root->rightball;
+	}
+}

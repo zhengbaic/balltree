@@ -19,11 +19,9 @@ public:
 
 	void buildBall(ball *&node, int n, int d, float **data);
 
-	bool storeTree(
-		const char* index_path);
+	bool storeTree(const char* index_path);
 
-	bool restoreTree(
-		const char* index_path);
+	bool restoreTree(const char* index_path);
 	
 	int mipSearch(
 		int d,

@@ -49,6 +49,7 @@ void BallTree::buildBall(ball* &node, int n, int d, float **data) {
 		//р╤вс
 		storage.insert(map<int, float**>::value_type(bid, data));
 		node->bid = bid;
+		node->datanum = n;
 		bid++;
 	}
 	else {
@@ -73,4 +74,14 @@ void BallTree::buildBall(ball* &node, int n, int d, float **data) {
 		buildBall(node->leftball, leftd.size(), d, leftdata);
 		buildBall(node->rightball, rightd.size(), d, rightdata);
 	}
+}
+
+bool BallTree::storeTree(const char* index_path) {
+	openF(root, storage, index_path);
+	return true;
+}
+
+bool BallTree::restoreTree(const char* index_path) {
+	readF(root, index_path);
+	return true;
 }
