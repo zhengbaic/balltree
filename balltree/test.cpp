@@ -48,12 +48,12 @@ int main() {
 
 	ball_tree1.storeTree(index_path);
 
-	/*if (!read_data(qn, d, query, query_path));
+	if (!read_data(qn, d, query, query_path));
 	FILE* fout = fopen(output_path, "w");
 	if (!fout) {
 		printf("can't open %s!\n", output_path);
 		return 1;
-	}*/
+	}
 
 	//BallTree ball_tree2;
 	//ball_tree2.restoreTree(index_path);
