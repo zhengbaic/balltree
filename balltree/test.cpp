@@ -7,11 +7,10 @@
 
 #ifdef Netflix
 char dataset[L] = "Netflix";
-int n = 17770;
+int n = 200;
 int	d = 50;
 int qn = 1000;
 #endif // Netflix
-
 
 #ifdef MNIST
 char dataset[L] = "Mnist";
@@ -30,16 +29,20 @@ int main() {
 	char index_path[L], output_path[L];
 	float** data = nullptr;
 	float** query = nullptr;
-	sprintf(data_path, "%s/src/dataset.txt", dataset);
 
-	//sprintf(query_path, "%s/src/query.txt", dataset);
-	sprintf(index_path, "%s/index/", dataset);
-	//sprintf(output_path, "%s/dst/answer.txt", dataset);
+	sprintf(data_path, "%s/src/dataset.txt", dataset);
+	sprintf(query_path, "%s/src/query.txt", dataset);
+	sprintf(index_path, "%s/index", dataset);
+	sprintf(output_path, "%s/dst/answer.txt", dataset);
+
 	if (!read_data(n, d, data, data_path)) {
 		return 1;
 	}
+
 	BallTree ball_tree1;
 	ball_tree1.buildTree(n, d, data);
+
+	// 查看建树后的结果，用于调试
 	/*cout << endl << endl << endl << "建树" << endl;
 	output(ball_tree1.root);*/
 
@@ -54,22 +57,25 @@ int main() {
 
 	BallTree ball_tree2;
 	ball_tree2.restoreTree(index_path);
-	cout << endl << endl << endl << "文件读取" << endl;
+
+	// 查看读取文件后的结果，用于调试
+	/*cout << endl << endl << endl << "文件读取" << endl;
 	output(ball_tree2.root);
-	cout << "finish" << endl;
-	/*for (int i = 0; i < qn; i++) {
+	cout << "finish" << endl;*/
+
+
+	for (int i = 0; i < qn; i++) {
 		int index = ball_tree2.mipSearch(d, query[i]);
 		fprintf(fout, "%d\n", index);
 	}
 	fclose(fout);
 
-	for (int i = 0; i < n; i++) {
+	/*for (int i = 0; i < n; i++) {
 		delete[] data[i];
 	}
 
 	for (int i = 0; i < qn; i++) {
 		delete[] query[i];
 	}*/
-
 	return 0;
 }
