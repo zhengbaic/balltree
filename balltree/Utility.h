@@ -27,6 +27,7 @@ struct ball {
 		leftball = rightball = NULL;
 	}
 };
+
 struct Quadball {
 	Quadball* ball1;
 	Quadball* ball2;
@@ -64,9 +65,7 @@ void outputfloat2(float** f, int n, int d);
 
 void displayCenter(float* f, int d);
 
-void insertOnePointAndUpdateNode(ball *b, float *data) {
-	
-}
+void insertOnePointAndUpdateNode(ball *b, float *data);
 
 float getMax(int d, float* query, ball* Root);
 

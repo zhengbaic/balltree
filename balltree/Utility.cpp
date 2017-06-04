@@ -1,15 +1,15 @@
 #include <cstdio>
 #include <cmath>
 #include <algorithm>
-#include<vector>
-#include<fstream>
-#include<stack>
-#include<iostream>
-#include<map>
-#include<sstream>
+#include <vector>
+#include <fstream>
+#include <stack>
+#include <iostream>
+#include <map>
+#include <sstream>
 #include "Utility.h"
 #include "BallTree.h"
-#include<set>
+#include <set>
 
 using namespace std;
 

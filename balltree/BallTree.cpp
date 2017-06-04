@@ -82,6 +82,7 @@ bool BallTree::buildQuadTree(int n, int d, float ** data)
 	//displayTree();
 	return true;
 }
+
 void BallTree::buildQuadBall(Quadball* &node, int n, int d, float **data) {
 	node = new Quadball();
 	QuadAnalyse(node, n, d, data);
@@ -130,6 +131,7 @@ void BallTree::buildQuadBall(Quadball* &node, int n, int d, float **data) {
 		buildQuadBall(node->ball4, d4.size(), d, data1);
 	}
 }
+
 int BallTree::mipSearch(int d,float* query) {
 	float Max = 0;
 	Max = eval(d, query, Max, root->leftball);
@@ -230,7 +232,7 @@ void BallTree::loadBlock(const int bid) {
 }
 
 bool BallTree::insertData(int d, float* point) {
-	ball *node = search(d, point);
+	ball *node = root;  // 这里需要改
 	if (node == NULL) {
 		return false;
 	}
