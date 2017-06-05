@@ -138,6 +138,14 @@ void QuadSplit(int n, int de, float* &a, float* &b, float* &c, float* &d, float*
 	d = FindFurestPoint(data, c, n, de);
 }
 
+point* VectorToPoint(vector<point> v) {
+	int size = v.size();
+	point *res = new point[size];
+	for (int i = 0; i < size; i++) {
+		res[i] = v[i];
+	}
+	return res;
+}
 float** VectorToFloat(vector<float*> v) {
 	int size = v.size();
 	float **res = new float*[size];

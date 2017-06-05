@@ -41,7 +41,7 @@ int main() {
 
 	BallTree ball_tree1;
 	ball_tree1.buildTree(n, d, data);
-
+	cout << endl << endl << endl << "建树" << endl;
 	// 查看建树后的结果，用于调试
 	/*cout << endl << endl << endl << "建树" << endl;
 	output(ball_tree1.root);*/

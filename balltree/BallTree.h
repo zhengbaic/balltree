@@ -38,7 +38,7 @@ public:
 	bool buildTree(int n, int d, float** data);
 
 	// @author bytrain
-	void buildBall(ball *&node, int n, int d, float **data);
+	void buildBall(ball *&node, int n, int d, point *p);
 
 	// @author sysuzzy
 	bool storeTree(const char* index_path);

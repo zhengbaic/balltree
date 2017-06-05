@@ -1,8 +1,10 @@
 #include "BallTree.h"
 
 // 全局变量
-map<int, float**> storage;
+map<int, point*> storage;
 vector<ball*> balls;
+
+static int id = 0;
 
 BallTree::BallTree() {
 	dimesion = 0;
@@ -18,21 +20,37 @@ bool BallTree::buildTree(int n, int d, float **data) {
 	dimesion = d;
 	num = n;
 	printf("Building tree ...\n");
-	buildBall(root, n, d, data);
+	point* points = new point[n];
+	for (int i = 0; i < n; i++) {
+		points[i].data = new float[d];
+		points[i].id = id++;
+		for (int j = 0; j < d; j++) {
+			points[i].data[j] = data[i][j];
+		}
+	}
+	buildBall(root, n, d, points);
 	printf("Building tree completed!\n");
 	displayTree();
 
 	return true;
 }
 
-void BallTree::buildBall(ball* &node, int n, int d, float **data) {
+void BallTree::buildBall(ball* &node, int n, int d, point *points) {
 	static int bid = 0;
 
 	node = new ball();
+	float** data;
+	data = new float*[n];
+	for (int i = 0; i < n; i++) {
+		data[i] = new float[d];
+		for (int j = 0; j < d; j++) {
+			data[i][j] = points[i].data[j];
+		}
+	}
 	Analyse(node, n, d, data);  // 得到圆心跟半径（Utility.cpp）
 	if (n <= N0) {
 		//叶子
-		storage.insert(map<int, float**>::value_type(bid, data));
+		storage.insert(map<int, point*>::value_type(bid, points));
 		node->bid = bid;
 		balls.push_back(node);
 		node->datanum = n;
@@ -42,20 +60,22 @@ void BallTree::buildBall(ball* &node, int n, int d, float **data) {
 		float* A = NULL;
 		float* B = NULL;
 		Split(n, d, A, B, data);
-		float ** leftdata;//A
-		float ** rightdata;//B
+		point* leftdata;//A
+		point* rightdata;//B
+		vector<point> leftp;
+		vector<point> rightp;
 		vector<float*> leftd;
 		vector<float*> rightd;
 		for (int i = 0; i < n; i++) {
-			if (getDistanse(A, data[i], d) < getDistanse(B, data[i], d)) {//A
-				leftd.push_back(data[i]);
+			if (getDistanse(A, points[n].data, d) < getDistanse(B, points[n].data, d)) {//A
+				leftp.push_back(points[n]);
 			}
 			else {
-				rightd.push_back(data[i]);
+				rightp.push_back(points[n]);
 			}
 		}
-		leftdata = VectorToFloat(leftd);
-		rightdata = VectorToFloat(rightd);
+		leftdata = VectorToPoint(leftp);
+		rightdata = VectorToPoint(rightp);
 
 		buildBall(node->leftball, leftd.size(), d, leftdata);
 		buildBall(node->rightball, rightd.size(), d, rightdata);
@@ -63,7 +83,7 @@ void BallTree::buildBall(ball* &node, int n, int d, float **data) {
 }
 
 bool BallTree::storeTree(const char* index_path) {
-	openF(root, storage, index_path);
+	//openF(root, storage, index_path);
 	return true;
 }
 
@@ -145,7 +165,7 @@ float BallTree::eval(int d, float* query, float Max,ball* Root) {
 	float temp;
 	if (Root->leftball == NULL && Root->rightball == NULL) {
 		for (int i = 0; i <= sizeof(storage[Root->bid]) / sizeof(float) / d; i++) {
-			temp = getInnerproduct(d, query, storage[Root->bid][i]);
+			//temp = getInnerproduct(d, query, storage[Root->bid][i]);
 			if (Max < temp) {
 				Max = temp;
 				target_bid = Root->bid;

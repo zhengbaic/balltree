@@ -12,6 +12,14 @@
 
 using namespace std;
 
+struct point {
+	int id;
+	float* data;
+	point() {
+		data = NULL;
+	}
+};
+
 struct ball {
 	ball* leftball;
 	ball* rightball;
@@ -52,6 +60,8 @@ void Split(int n, int d, float* &a, float* &b, float** data);
 void QuadSplit(int n, int de, float* &a, float* &b, float* &c, float* &d, float** data, float* & meanW);
 
 float getDistanse(float* a, float *b, int d);
+
+point* VectorToPoint(vector<point> v);
 
 float** VectorToFloat(vector<float*> v);
 
