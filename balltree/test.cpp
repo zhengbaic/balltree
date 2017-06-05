@@ -3,7 +3,7 @@
 #include "BallTree.h"
 #include "Utility.h"
 
-#define Netflix
+#define MNIST
 
 #ifdef Netflix
 char dataset[L] = "Netflix";
@@ -14,7 +14,7 @@ int qn = 1000;
 
 #ifdef MNIST
 char dataset[L] = "Mnist";
-int n = 600, d = 50;
+int n = 60000, d = 50;
 int qn = 1000;
 #endif
 
@@ -43,10 +43,10 @@ int main() {
 	ball_tree1.buildTree(n, d, data);
 	cout << endl << endl << endl << "建树" << endl;
 	// 查看建树后的结果，用于调试
-	/*cout << endl << endl << endl << "建树" << endl;
-	output(ball_tree1.root);*/
+	// cout << endl << endl << endl << "建树" << endl;
+	// output(ball_tree1.root);
 
-	ball_tree1.storeTree(index_path);
+	// ball_tree1.storeTree(index_path);
 
 	if (!read_data(qn, d, query, query_path));
 	FILE* fout = fopen(output_path, "w");
