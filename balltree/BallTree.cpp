@@ -43,6 +43,7 @@ bool BallTree::buildTree(int n, int d, float **data) {
 			points[i].data[j] = data[i][j];
 		}
 	}
+	root = new ball();
 	buildBall(root, n, d, points);
 	printf("Building tree completed!\n");
 	
@@ -53,7 +54,6 @@ bool BallTree::buildTree(int n, int d, float **data) {
 void BallTree::buildBall(ball* &node, int n, int d, point *points) {
 	static int bid = 0;
 
-	node = new ball();
 	float** data = new float*[n];
 	for (int i = 0; i < n; i++) {
 		data[i] = new float[d];
@@ -88,6 +88,8 @@ void BallTree::buildBall(ball* &node, int n, int d, point *points) {
 		}
 		leftdata = VectorToPoint(leftp);
 		rightdata = VectorToPoint(rightp);
+		node->leftball = new ball();
+		node->rightball = new ball();
 		node->leftball->parent = node;
 		node->rightball->parent = node;
 		buildBall(node->leftball, leftp.size(), d, leftdata);
