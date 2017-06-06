@@ -17,11 +17,14 @@ using namespace std;
 
 struct point {
 	int id;
-	float* data;
+	float *data;
 
 	point() {
-		id = -1;
 		data = NULL;
+		id = -1;
+	}
+	~point() {
+		delete data;
 	}
 };
 

@@ -16,25 +16,16 @@ using namespace std;
 class BallTree {
 private:
 	int dimesion;//维度
-
 	int num; // 记录的总数量
-
 	int numOfBlocks;
-
 	int pid;  // 当前使用页的id
-	int numOfBlock; // 块数
-
 	int target_bid;
-
 	ball *root;
-
 	ball *target;
-
 	Quadball *Quadroot;
-
 	point page[POINTS_PER_PAGE];
-
 	point block[N0];
+	bool initPage;  // 是否初始化过page
 public:
 	BallTree();
 
@@ -82,10 +73,6 @@ public:
 	// 根据bid加载相应的数据到私有成员block中
 	// @author painterdrown
 	void loadBlock(const int bid);
-
-	// 替换ball节点
-	// @author painterdrown
-	void replaceBall(ball *oldBall, ball *newBall);
 
 	// 根据pid保存page到硬盘中
 	// @author sysuzzy

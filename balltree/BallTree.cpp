@@ -2,12 +2,8 @@
 
 // 全局变量
 map<int, point*> storage;
-vector<ball*> balls;
-
-static int id = 1;
 
 BallTree::BallTree() {
-	numOfBlock = 0;
 	dimesion = 0;
 	num = 0;
 	pid = -1;
@@ -16,22 +12,31 @@ BallTree::BallTree() {
 	Quadroot = NULL;
 	numOfBlocks = 0;
 	target_bid = -1;
+	initPage = false;
 }
 
 BallTree::~BallTree() {
 	// 将更新的页面保存到硬盘
 	savePage(pid);
+
+	// delete掉，免得内存泄漏
+	for (auto i : storage) {
+		delete i.second->data;
+	}
+	storage.clear();
 }
 
 int BallTree::getNumOfBlock() {
-	return numOfBlock;
+	return numOfBlocks;
 }
 
 void BallTree::setNumOfBlock(int num) {
-	numOfBlock = num;
+	numOfBlocks = num;
 }
 
 bool BallTree::buildTree(int n, int d, float **data) {
+	static int id = 1;
+
 	dimesion = d;
 	num = n;
 	printf("Building tree ...\n");
@@ -53,6 +58,7 @@ bool BallTree::buildTree(int n, int d, float **data) {
 
 void BallTree::buildBall(ball* &node, int n, int d, point *points) {
 	static int bid = 0;
+	static vector<ball*> balls;
 
 	float** data = new float*[n];
 	for (int i = 0; i < n; i++) {
@@ -106,7 +112,7 @@ bool BallTree::storeTree(const char* index_path) {
 
 bool BallTree::restoreTree(const char* index_path) {
 	printf("Restoring tree ...\n");
-	numOfBlock = readF(root, index_path);
+	numOfBlocks = readF(root, index_path);
 	printf("Restoring tree completed!\n");
 	return true;
 }
@@ -231,25 +237,37 @@ void BallTree::loadPage(const int pid) {
 	}
 
 	// 先保存当前在内存中的页
-	savePage(pid);
+	if (this->pid != -1) {
+		savePage(pid);
+	}
 
+	// 为page申请好所有的空间
+	if (!initPage) {
+		for (int i = 0; i < POINTS_PER_PAGE; ++i) {
+			page[i].data = new float[dimesion]{0.0f};
+		}
+	}
+
+	// 从硬盘中读取新的页
 	FILE *fp;
 	char filename[L];
 	sprintf(filename, "page%d.bin", pid);
 	fp = fopen(filename, "rb");
-	if (fp != NULL) {
-		fread(page, SIZE_OF_POINT(dimesion), POINTS_PER_PAGE, fp);
-		this->pid = pid;
+	if (fp == NULL) {
+		return;
+	}
+	for (int i = 0; i < POINTS_PER_PAGE; ++i) {
+		fread(&page[i].id, sizeof(int), 1, fp);
+		fread(page[i].data, sizeof(float), dimesion, fp);
 	}
 }
 
 void BallTree::loadBlock(const int bid) {
-	int pos = getBlockPosInPage(bid);
-
 	// 从硬盘中加载page
 	loadPage(pid);
 
 	// 从page中读取block
+	int pos = getBlockPosInPage(bid);
 	memcpy(block, page + pos, BYTES_PER_BLOCK(dimesion));
 }
 
@@ -259,14 +277,25 @@ bool BallTree::insertData(int d, float* data) {
 	}
 
 	int id = mipSearch(dimesion, data);
-	if (id == 0 || target == NULL) {
-		//return;
+	if (id == -1 || target == NULL) {
+		return false;
 	}
 
+	// 如果不用分裂
 	if (target->datanum < N0) {
 		float distance = getDistanse(data, target->CircleCenter, dimesion);
 		if (distance > target->radius) {
 			target->radius = distance;
+			ball *parent = target->parent;
+			while (parent != NULL) {
+				float distance = getDistanse(data, parent->CircleCenter, dimesion);
+				if (distance > parent->radius) {
+					parent->radius = distance;
+					parent = parent->parent;
+				} else {
+					break;
+				}
+			}
 		}
 		// 把新增加的point放入page里面
 		point p;
@@ -274,33 +303,66 @@ bool BallTree::insertData(int d, float* data) {
 		p.data = new float[dimesion];
 		memcpy(p.data, data, sizeof(float) * dimesion);
 		int pos = getBlockPosInPage(target->bid);
-		page[pos + target->datanum] = p;
-		target->datanum++;
+		page[pos + target->datanum++] = p;
 	} else {
 		// 创建新的point数组来buildBall
 		point *points = new point[N0 + 1];
+
 		// 将原来节点上的points放到新的point数组里面
 		loadBlock(target->bid);
 		memcpy(points, block, SIZE_OF_POINT(dimesion) * N0);
+
 		// 用要插入的data来创建新的point
-		point p;
-		p.id = ++num;
-		p.data = new float[dimesion];
-		memcpy(p.data, data, sizeof(float) * dimesion);
-		// 将新point放进新points数组里面
-		points[N0] = p;
+		points[N0].id = ++num;
+		points[N0].data = new float[dimesion];
+		memcpy(points[N0].data, data, sizeof(float) * dimesion);
+
 		// 开始buildBall创建新的节点temp
 		ball *temp = NULL;
 		buildBall(temp, N0 + 1, dimesion, points);
 		temp->bid = -1;
-		temp->leftball->bid = target->bid;
-		temp->rightball->bid = numOfBlocks++;
-		// 将原来的节点替换为temp
-		replaceBall(target, temp);
+		temp->datanum = -1;
+		temp->leftball->bid = target->bid;  // 分裂出来的左节点使用原理节点的block
+		temp->rightball->bid = numOfBlocks++;  // 分裂出来的右节点要在所以blocks后面追加一个block（可能要开一张新的page）
+
+		// 将新节点与父节点连接起来
+		if (target->parent->leftball == target) {
+			target->parent->leftball = temp;
+		} else {
+			target->parent->rightball = temp;
+		}
+
+		// 获取分裂后左右两个节点的数据
+		auto it = storage.rbegin();
+		point *leftpoints  = it->second;
+		++it;
+		point *rightpoints = it->second;
+
+		// 把左节点的数据保存到page相应的block中
+		int pos = getBlockPosInPage(temp->leftball->bid);
+		for (int i = 0; i < temp->leftball->datanum; ++i) {
+			page[pos + i].id = leftpoints[i].id;
+			memcpy(page[pos + i].data, leftpoints[i].data, SIZE_OF_POINT(dimesion));
+		}
+
 		// 如果需要新开一页
 		if (numOfBlocks % BLOCKS_PER_PAGE == 0) {
+			// 将右节点的数据放到page里面
+			for (int i = 0; i < temp->rightball->datanum; ++i) {
+				page[i].id = rightpoints[i].id;
+				memcpy(page[i].data, rightpoints[i].data, SIZE_OF_POINT(dimesion));
+			}
 
-			savePage(numOfBlocks / BLOCKS_PER_PAGE);
+			// 将当前页置换为pid
+			pid = numOfBlocks / BLOCKS_PER_PAGE;
+		} else {
+			// 加载最后一张page并且将右节点的数据放到里面
+			loadPage(numOfBlocks / BLOCKS_PER_PAGE);
+			int pos = getBlockPosInPage(temp->rightball->bid);
+			for (int i = 0; i < temp->rightball->datanum; ++i) {
+				page[pos + i].id = rightpoints[i].id;
+				memcpy(page[pos + i].data, rightpoints[i].data, SIZE_OF_POINT(dimesion));
+			}
 		}
 	}
 
@@ -311,19 +373,19 @@ bool BallTree::deleteData(int d, float* data) {
 	return true;
 }
 
-void BallTree::replaceBall(ball *oldBall, ball *newBall) {
-	if (oldBall == NULL || newBall == NULL) {
-		return;
-	}
-
-	if (root == oldBall) {
-		delete root;
-		root = newBall;
-		return;
-	}
-
-	traverseAndReplace(root, oldBall, newBall);
-}
+//void BallTree::replaceBall(ball *oldBall, ball *newBall) {
+//	if (oldBall == NULL || newBall == NULL) {
+//		return;
+//	}
+//
+//	if (root == oldBall) {
+//		delete root;
+//		root = newBall;
+//		return;
+//	}
+//
+//	traverseAndReplace(root, oldBall, newBall);
+//}
 
 int BallTree::getBlockPosInPage(const int bid) {
 	int pid = bid / BLOCKS_PER_PAGE;
