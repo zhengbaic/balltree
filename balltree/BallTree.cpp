@@ -4,7 +4,7 @@
 map<int, point*> storage;
 vector<ball*> balls;
 
-static int id = 0;
+static int id = 1;
 
 BallTree::BallTree() {
 	dimesion = 0;
@@ -64,21 +64,19 @@ void BallTree::buildBall(ball* &node, int n, int d, point *points) {
 		point* rightdata;//B
 		vector<point> leftp;
 		vector<point> rightp;
-		vector<float*> leftd;
-		vector<float*> rightd;
 		for (int i = 0; i < n; i++) {
-			if (getDistanse(A, points[n].data, d) < getDistanse(B, points[n].data, d)) {//A
-				leftp.push_back(points[n]);
+			if (getDistanse(A, points[i].data, d) < getDistanse(B, points[i].data, d)) {//A
+				leftp.push_back(points[i]);
 			}
 			else {
-				rightp.push_back(points[n]);
+				rightp.push_back(points[i]);
 			}
 		}
 		leftdata = VectorToPoint(leftp);
 		rightdata = VectorToPoint(rightp);
 
-		buildBall(node->leftball, leftd.size(), d, leftdata);
-		buildBall(node->rightball, rightd.size(), d, rightdata);
+		buildBall(node->leftball, leftp.size(), d, leftdata);
+		buildBall(node->rightball, rightp.size(), d, rightdata);
 	}
 }
 

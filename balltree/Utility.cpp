@@ -142,7 +142,8 @@ point* VectorToPoint(vector<point> v) {
 	int size = v.size();
 	point *res = new point[size];
 	for (int i = 0; i < size; i++) {
-		res[i] = v[i];
+		res[i].data = v[i].data;
+		res[i].id = v[i].id;
 	}
 	return res;
 }
