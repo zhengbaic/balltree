@@ -351,3 +351,24 @@ float getInnerproduct(int d, float * query, float * vec) {
 	}
 	return Innerproduct;
 }
+
+bool traverseAndReplace(ball *root, ball *oldBall, ball *newBall) {
+	if (root == NULL || oldBall == NULL) {
+		return false;
+	}
+
+	if (root->leftball == oldBall) {
+		delete root->leftball;
+		root->leftball = newBall;
+		return true;
+	}
+	if (root->rightball == oldBall) {
+		delete root->rightball;
+		root->rightball = newBall;
+		return true;
+	}
+	if (!traverseAndReplace(root->leftball, oldBall, newBall)) {
+		return traverseAndReplace(root->rightball, oldBall, newBall);
+	}
+	return true;
+}

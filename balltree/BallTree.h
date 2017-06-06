@@ -7,21 +7,25 @@
 #include <queue>
 #include <cstdio>
 #define N0                    20
-#define BYTES_PER_BLOCK(d)    N0 * ( d * 4 + 1)
+#define SIZE_OF_POINT(d)      4 + 4 * d
+#define BYTES_PER_BLOCK(d)    N0 * SIZE_OF_POINT(d)
 #define BLOCKS_PER_PAGE       16
 #define POINTS_PER_PAGE       N0 * BLOCKS_PER_PAGE
-#define SIZE_OF_POINT(d)      4 + 4 * d
 using namespace std;
 
 class BallTree {
 private:
 	int dimesion;//维度
 
-	int num; //数量
+	int num; // 记录的总数量
 
-	int target_bid;
+	int numOfBlocks;
+
+	int pid;  // 当前使用页的id
 
 	ball *root;
+
+	ball *target;
 
 	Quadball *Quadroot;
 
@@ -75,6 +79,17 @@ public:
 	// 根据bid加载相应的数据到私有成员block中
 	// @author painterdrown
 	void loadBlock(const int bid);
+
+	// 替换ball节点
+	// @author painterdrown
+	void replaceBall(ball *oldBall, ball *newBall);
+
+	// 根据pid保存page到硬盘中
+	// @author sysuzzy
+	void savePage(const int pid);
+
+	// 根据bid算出该快在page中的位置
+	int getBlockPosInPage(const int bid);
 };
 
 #endif

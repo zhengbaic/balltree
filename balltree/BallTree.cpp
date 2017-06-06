@@ -9,12 +9,17 @@ static int id = 1;
 BallTree::BallTree() {
 	dimesion = 0;
 	num = 0;
-	target_bid = -1;
+	pid = -1;
 	root = NULL;
+	target = NULL;
 	Quadroot = NULL;
+	numOfBlocks = 0;
 }
 
-BallTree::~BallTree() {}
+BallTree::~BallTree() {
+	// 将更新的页面保存到硬盘
+	savePage(pid);
+}
 
 bool BallTree::buildTree(int n, int d, float **data) {
 	dimesion = d;
@@ -50,7 +55,7 @@ void BallTree::buildBall(ball* &node, int n, int d, point *points) {
 	}
 	Analyse(node, n, d, data);  // 得到圆心跟半径（Utility.cpp）
 	if (n <= N0) {
-		//叶子
+		// 叶子
 		storage.insert(map<int, point*>::value_type(bid, points));
 		node->bid = bid;
 		balls.push_back(node);
@@ -75,7 +80,8 @@ void BallTree::buildBall(ball* &node, int n, int d, point *points) {
 		}
 		leftdata = VectorToPoint(leftp);
 		rightdata = VectorToPoint(rightp);
-
+		node->leftball->parent = node;
+		node->rightball->parent = node;
 		buildBall(node->leftball, leftp.size(), d, leftdata);
 		buildBall(node->rightball, rightp.size(), d, rightdata);
 	}
@@ -154,22 +160,26 @@ void BallTree::buildQuadBall(Quadball* &node, int n, int d, float **data) {
 }
 
 int BallTree::mipSearch(int d,float* query) {
+	if (d != dimesion) {
+		return -1;
+	}
+
 	float Max = 0;
 	Max = eval(d, query, Max, root->leftball);
 	if (Max < getMax(d,query, root->rightball)) {
 		eval(d, query, Max, root->rightball);
 	}
-	return target_bid;
+	return -1;  // 这里需要改！
 }
 
-float BallTree::eval(int d, float* query, float Max,ball* Root) {
+float BallTree::eval(int d, float* query, float Max, ball* Root) {
 	float temp = 0.0f;
 	if (Root->leftball == NULL && Root->rightball == NULL) {
 		for (int i = 0; i <= sizeof(storage[Root->bid]) / sizeof(float) / d; i++) {
 			//temp = getInnerproduct(d, query, storage[Root->bid][i]);
 			if (Max < temp) {
 				Max = temp;
-				target_bid = Root->bid;
+				target = Root;
 			}
 		}
 		return Max;
@@ -201,14 +211,15 @@ void BallTree::displayTree() {
 }
 
 void BallTree::loadPage(const int pid) {
-	static int currPid = -1;
-
 	if (pid < 0) {
 		return;
 	}
-	if (pid == currPid) {
+	if (pid == this->pid) {
 		return;
 	}
+
+	// 先保存当前在内存中的页
+	savePage(pid);
 
 	FILE *fp;
 	char filename[L];
@@ -216,44 +227,69 @@ void BallTree::loadPage(const int pid) {
 	fp = fopen(filename, "rb");
 	if (fp != NULL) {
 		fread(page, SIZE_OF_POINT(dimesion), POINTS_PER_PAGE, fp);
-		currPid = pid;
+		this->pid = pid;
 	}
 }
 
 void BallTree::loadBlock(const int bid) {
-	int strPos, endPos, pid, leftBlocksInPages;
-
-	// 计算各种参数
-	pid = bid / BLOCKS_PER_PAGE;
-	leftBlocksInPages = bid % BLOCKS_PER_PAGE;
-	strPos = leftBlocksInPages * BYTES_PER_BLOCK(dimesion);  // 第一个float所在的位置
+	int pos = getBlockPosInPage(bid);
 
 	// 从硬盘中加载page
 	loadPage(pid);
 
 	// 从page中读取block
-	memcpy(block, page + strPos, BYTES_PER_BLOCK(dimesion) - 1);
+	memcpy(block, page + pos, BYTES_PER_BLOCK(dimesion));
 }
 
-bool BallTree::insertData(int d, float* point) {
-	ball *node = root;  // 这里需要改
-	if (node == NULL) {
+bool BallTree::insertData(int d, float* data) {
+	if (data == NULL) {
 		return false;
 	}
 
-	if (node->datanum < N0) {
-		float distance = getDistanse(point, node->CircleCenter, dimesion);
-		if (distance > node->radius) {
-			node->radius = distance;
+	int id = mipSearch(dimesion, data);
+	if (id == 0 || target == NULL) {
+		return;
+	}
+
+	if (target->datanum < N0) {
+		float distance = getDistanse(data, target->CircleCenter, dimesion);
+		if (distance > target->radius) {
+			target->radius = distance;
 		}
-		//appendPointIntoBlock(point, node->bid);
-		node->datanum++;
+		// 把新增加的point放入page里面
+		point p;
+		p.id = ++num;
+		p.data = new float[dimesion];
+		memcpy(p.data, data, sizeof(float) * dimesion);
+		int pos = getBlockPosInPage(target->bid);
+		page[pos + target->datanum] = p;
+		target->datanum++;
 	} else {
-		//splitToTwoCircles(node, point);
-		delete node;
-		// 从数据所在的页中读取出来
-		// 可以在搜索的时候就保存页面
-		//buildBall(node, N0 + 1, dimesion, );
+		// 创建新的point数组来buildBall
+		point *points = new point[N0 + 1];
+		// 将原来节点上的points放到新的point数组里面
+		loadBlock(target->bid);
+		memcpy(points, block, SIZE_OF_POINT(dimesion) * N0);
+		// 用要插入的data来创建新的point
+		point p;
+		p.id = ++num;
+		p.data = new float[dimesion];
+		memcpy(p.data, data, sizeof(float) * dimesion);
+		// 将新point放进新points数组里面
+		points[N0] = p;
+		// 开始buildBall创建新的节点temp
+		ball *temp = NULL;
+		buildBall(temp, N0 + 1, dimesion, points);
+		temp->bid = -1;
+		temp->leftball->bid = target->bid;
+		temp->rightball->bid = numOfBlocks++;
+		// 将原来的节点替换为temp
+		replaceBall(target, temp);
+		// 如果需要新开一页
+		if (numOfBlocks % BLOCKS_PER_PAGE == 0) {
+
+			savePage(numOfBlocks / BLOCKS_PER_PAGE);
+		}
 	}
 
 	return true;
@@ -261,4 +297,24 @@ bool BallTree::insertData(int d, float* point) {
 
 bool BallTree::deleteData(int d, float* data) {
 	return true;
+}
+
+void BallTree::replaceBall(ball *oldBall, ball *newBall) {
+	if (oldBall == NULL || newBall == NULL) {
+		return;
+	}
+
+	if (root == oldBall) {
+		delete root;
+		root = newBall;
+		return;
+	}
+
+	traverseAndReplace(root, oldBall, newBall);
+}
+
+int BallTree::getBlockPosInPage(const int bid) {
+	int pid = bid / BLOCKS_PER_PAGE;
+	int leftBlocksInPages = bid % BLOCKS_PER_PAGE;
+	int pos = leftBlocksInPages * BYTES_PER_BLOCK(dimesion);  // 第一个float所在的位置
 }

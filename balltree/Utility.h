@@ -26,6 +26,7 @@ struct point {
 };
 
 struct ball {
+	ball* parent;
 	ball* leftball;
 	ball* rightball;
 	int datanum;
@@ -37,7 +38,7 @@ struct ball {
 		datanum = -1;
 		radius = 0;
 		bid = -1;
-		leftball = rightball = NULL;
+		parent =  leftball = rightball = NULL;
 	}
 };
 
@@ -81,12 +82,12 @@ void outputfloat2(float** f, int n, int d);
 
 void displayCenter(float* f, int d);
 
-void insertOnePointAndUpdateNode(ball *b, float *data);
-
 float getMax(int d, float* query, ball* Root);
 
 float getLength(int d, float* query);
 
 float getInnerproduct(int d, float * query, float * vec);
+
+bool traverseAndReplace(ball *root, ball *oldBall, ball *newBall);
 
 #endif
