@@ -155,7 +155,7 @@ float** VectorToFloat(vector<float*> v) {
 	return res;
 }
 
-void openF(ball* root, map<int, float**> storage, const char* index_path) {
+void openF(ball* root, map<int, point*> storage, const char* index_path) {
 	// 索引树文件
 	ofstream outFile;
 	string tempFileName = index_path;
@@ -164,7 +164,7 @@ void openF(ball* root, map<int, float**> storage, const char* index_path) {
 	
 	// 数据文件
 	ofstream dataFile;
-	map<int, float**>::iterator mapIter;
+	map<int, point*>::iterator mapIter;
 	int pageId = 0;							// 页号
 	int count = 0;							// 每页的数量
 	stringstream stream;
@@ -177,6 +177,7 @@ void openF(ball* root, map<int, float**> storage, const char* index_path) {
 	dataFile.open(tempFileName, ios_base::out | ios_base::binary);
 
 	// 做一个点填补空项
+	int zeroIndex = -1;
 	float zeroPoint[50] = {0.0};
 	for (int i = 0; i < 50; i++) {
 		zeroPoint[i] = 0.0;
@@ -219,16 +220,19 @@ void openF(ball* root, map<int, float**> storage, const char* index_path) {
 				// 数据写入硬盘，不够位的用0点填补
 				mapIter = storage.find(root->bid);
 				if (mapIter != storage.end()) {
-					// dataFile.write((char*)&root->bid, sizeof root->bid);
 					for (int i = 0; i < root->datanum; i++) {
-						dataFile.write((char*)&mapIter->second[i], sizeof mapIter->second[0][0] * 50);
+						dataFile.write((char*)&mapIter->second[i].id, 4);
+						dataFile.write((char*)&mapIter->second[i].data, 4 * 50);
 						/*测试*/
+						cout << mapIter->second[i].id << endl;
 						for (int j = 0; j < 50; j++) {
-							cout << mapIter->second[i][j] << " ";
+							cout << mapIter->second[i].data[j] << " ";
 						}
 						cout << endl;
 					}
+
 					for (int i = 0; i < 20 - root->datanum; i++) {
+						dataFile.write((char*)&zeroIndex, sizeof zeroIndex);
 						dataFile.write((char*)&zeroPoint, sizeof zeroPoint);
 						/*测试*/
 						/*for (int j = 0; j < 50; j++) {
@@ -279,7 +283,7 @@ void readF(ball* &root, const char* index_path) {
 	root = head;
 	inFile.close();
 
-	/*ifstream dataFile;
+	ifstream dataFile;
 	dataFile.open("page0.bin", ios_base::in | ios_base::binary);
 	if (!dataFile.is_open()) {
 		exit(EXIT_FAILURE);
@@ -289,8 +293,10 @@ void readF(ball* &root, const char* index_path) {
 	cout << endl << endl << endl << endl;
 	int count = 300;
 	while (count--) {
+		int index = 0;
+		dataFile.read((char*)index, 4);
 		float *point = new float[50];
-		dataFile.read((char*)&point, sizeof 4 * 50);
+		dataFile.read((char*)&point, 4 * 50);
 		if (point == NULL) {
 			cout << "此处是零点" << endl;
 		}
@@ -300,9 +306,8 @@ void readF(ball* &root, const char* index_path) {
 			}
 			cout << endl;
 		}
-		
 	}
-	dataFile.close();*/
+	dataFile.close();
 }
 
 void output(ball* root) {

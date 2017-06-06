@@ -71,7 +71,7 @@ public:
 
 	// 按树的层次遍历并且输出
 	// @author painterdrown
-	void displayTree();
+	// void displayTree();
 
 	// 根据pid记载硬盘中相应的page
 	// @author painterdrown

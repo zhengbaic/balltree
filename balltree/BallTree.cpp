@@ -30,7 +30,7 @@ bool BallTree::buildTree(int n, int d, float **data) {
 	}
 	buildBall(root, n, d, points);
 	printf("Building tree completed!\n");
-	displayTree();
+	//displayTree();
 
 	return true;
 }
@@ -83,7 +83,7 @@ void BallTree::buildBall(ball* &node, int n, int d, point *points) {
 }
 
 bool BallTree::storeTree(const char* index_path) {
-	//openF(root, storage, index_path);
+	openF(root, storage, index_path);
 	return true;
 }
 
@@ -162,7 +162,7 @@ int BallTree::mipSearch(int d,float* query) {
 }
 
 float BallTree::eval(int d, float* query, float Max,ball* Root) {
-	float temp;
+	float temp = 0.0f;
 	if (Root->leftball == NULL && Root->rightball == NULL) {
 		for (int i = 0; i <= sizeof(storage[Root->bid]) / sizeof(float) / d; i++) {
 			//temp = getInnerproduct(d, query, storage[Root->bid][i]);
@@ -180,24 +180,24 @@ float BallTree::eval(int d, float* query, float Max,ball* Root) {
 	return Max;
 }
 
-void BallTree::displayTree() {
-	queue<ball*> tree;
-	int count = 0;
-	int leaf = 0;
-	printf("=========== DISPLAY THE INDEX TREE ===========\n");
-	if (root != NULL) tree.push(root);
-	while (!tree.empty()) {
-		auto node = tree.front();
-		tree.pop();
-		if (node->bid != -1) ++leaf;
-		printf("NODE #%d:\t\tbid=%d\t\tdatanum=%d\n", count++, node->bid, node->datanum);
-		if (node->leftball) tree.push(node->leftball);
-		if (node->rightball) tree.push(node->rightball);
-	}
-	printf("==============================================\n");
-	printf("TOTAL NODES: %d\n", count);
-	printf("TOTAL LEAF NODES: %d\n", leaf);
-}
+//void BallTree::displayTree() {
+//	queue<ball*> tree;
+//	int count = 0;
+//	int leaf = 0;
+//	printf("=========== DISPLAY THE INDEX TREE ===========\n");
+//	if (root != NULL) tree.push(root);
+//	while (!tree.empty()) {
+//		auto node = tree.front();
+//		tree.pop();
+//		if (node->bid != -1) ++leaf;
+//		printf("NODE #%d:\t\tbid=%d\t\tdatanum=%d\n", count++, node->bid, node->datanum);
+//		if (node->leftball) tree.push(node->leftball);
+//		if (node->rightball) tree.push(node->rightball);
+//	}
+//	printf("==============================================\n");
+//	printf("TOTAL NODES: %d\n", count);
+//	printf("TOTAL LEAF NODES: %d\n", leaf);
+//}
 
 void BallTree::loadPage(const int pid, float *page) {
 	if (pid < 0) {

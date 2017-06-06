@@ -65,7 +65,7 @@ point* VectorToPoint(vector<point> v);
 
 float** VectorToFloat(vector<float*> v);
 
-void openF(ball* root, map<int, float**> storage, const char* index_path);
+void openF(ball* root, map<int, point*> storage, const char* index_path);
 
 void readF(ball* &root, const char* index_path);
 
