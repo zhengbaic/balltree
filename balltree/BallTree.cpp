@@ -7,14 +7,23 @@ vector<ball*> balls;
 static int id = 1;
 
 BallTree::BallTree() {
+	numOfBlock = 0;
 	dimesion = 0;
 	num = 0;
 	target_bid = -1;
-	root = NULL;
-	Quadroot = NULL;
+	root = new ball;
+	Quadroot = new Quadball;
 }
 
 BallTree::~BallTree() {}
+
+int BallTree::getNumOfBlock() {
+	return numOfBlock;
+}
+
+void BallTree::setNumOfBlock(int num) {
+	numOfBlock = num;
+}
 
 bool BallTree::buildTree(int n, int d, float **data) {
 	dimesion = d;
@@ -32,7 +41,6 @@ bool BallTree::buildTree(int n, int d, float **data) {
 	printf("Building tree completed!\n");
 	
 	// displayTree();
-
 	return true;
 }
 
@@ -40,8 +48,7 @@ void BallTree::buildBall(ball* &node, int n, int d, point *points) {
 	static int bid = 0;
 
 	node = new ball();
-	float** data;
-	data = new float*[n];
+	float** data = new float*[n];
 	for (int i = 0; i < n; i++) {
 		data[i] = new float[d];
 		for (int j = 0; j < d; j++) {
@@ -89,7 +96,9 @@ bool BallTree::storeTree(const char* index_path) {
 }
 
 bool BallTree::restoreTree(const char* index_path) {
-	readF(root, index_path);
+	printf("Restoring tree ...\n");
+	numOfBlock = readF(root, index_path);
+	printf("Restoring tree completed!\n");
 	return true;
 }
 
@@ -261,4 +270,25 @@ bool BallTree::insertData(int d, float* point) {
 
 bool BallTree::deleteData(int d, float* data) {
 	return true;
+}
+
+ball* BallTree::getRoot() {
+	return root;
+}
+
+void BallTree::savePage(int pid) {
+	stringstream stream;
+	stream << pid;
+	string temp;
+	stream >> temp;
+	string fileName = "page" + temp + ".bin";
+	ofstream dataFile;
+	dataFile.open(fileName, ios_base::out | ios_base::binary);
+	if (!dataFile.is_open()) {
+		exit(EXIT_FAILURE);
+	}
+	for (int i = 0; i < POINTS_PER_PAGE; i++) {
+		dataFile.write((char*)&page[i].id, sizeof 4);
+		dataFile.write((char*)page[i].data, sizeof 4.0f * 50);
+	}
 }

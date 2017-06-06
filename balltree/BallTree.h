@@ -19,6 +19,8 @@ private:
 
 	int num; //数量
 
+	int numOfBlock; // 块数
+
 	int target_bid;
 
 	ball *root;
@@ -75,6 +77,15 @@ public:
 	// 根据bid加载相应的数据到私有成员block中
 	// @author painterdrown
 	void loadBlock(const int bid);
+
+	// 写入单页
+	void savePage(int pid);
+
+	ball* getRoot();
+
+	int getNumOfBlock();
+
+	void setNumOfBlock(int num);
 };
 
 #endif
