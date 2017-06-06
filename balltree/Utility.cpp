@@ -192,6 +192,7 @@ void openF(ball* root, map<int, point*> storage, const char* index_path) {
 			outFile.write((char*)&root->datanum, sizeof 4);
 			outFile.write((char*)&root->leftball, sizeof 4);
 			outFile.write((char*)&root->rightball, sizeof 4);
+			outFile.write((char*)&root->parent, sizeof 4);
 			
 			// 如果是叶子结点则写入硬盘中
 			if (root->leftball == NULL && root->rightball == NULL) {
@@ -269,6 +270,7 @@ int readF(ball* &root, const char* index_path) {
 	inFile.read((char*)&root->datanum, sizeof 4);
 	inFile.read((char*)&root->leftball, sizeof 4);
 	inFile.read((char*)&root->rightball, sizeof 4);
+	inFile.read((char*)&root->parent, sizeof 4);
 
 	ball *head = root;
 	stack<ball*> Stack;
@@ -286,6 +288,7 @@ int readF(ball* &root, const char* index_path) {
 				inFile.read((char*)&root->datanum, sizeof 4);
 				inFile.read((char*)&root->leftball, sizeof 4);
 				inFile.read((char*)&root->rightball, sizeof 4);
+				inFile.read((char*)&root->parent, sizeof 4);
 			}
 			else {
 				flag = true;
@@ -335,7 +338,6 @@ int readF(ball* &root, const char* index_path) {
 void output(ball* root) {
 	stack<ball*> Stack;
 	while (root || !Stack.empty()) {
-
 		while (root) {
 			Stack.push(root);
 			cout << root->bid << " ";
