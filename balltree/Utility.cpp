@@ -1,16 +1,4 @@
-#include <cstdio>
-#include <cmath>
-#include <algorithm>
-#include <vector>
-#include <fstream>
-#include <stack>
-#include <iostream>
-#include <map>
-#include <sstream>
 #include "Utility.h"
-#include "BallTree.h"
-#include <set>
-
 using namespace std;
 
 bool read_data(int n, int d, float** &data, const char* file_name) {
@@ -147,6 +135,7 @@ point* VectorToPoint(vector<point> v) {
 	}
 	return res;
 }
+
 float** VectorToFloat(vector<float*> v) {
 	int size = v.size();
 	float **res = new float*[size];
@@ -224,22 +213,11 @@ void openF(ball* root, map<int, point*> storage, const char* index_path) {
 					for (int i = 0; i < root->datanum; i++) {
 						dataFile.write((char*)&mapIter->second[i].id, 4);
 						dataFile.write((char*)&mapIter->second[i].data, 4 * 50);
-						/*≤‚ ‘*/
-						cout << mapIter->second[i].id << endl;
-						for (int j = 0; j < 50; j++) {
-							cout << mapIter->second[i].data[j] << " ";
-						}
-						cout << endl;
 					}
 
 					for (int i = 0; i < 20 - root->datanum; i++) {
 						dataFile.write((char*)&zeroIndex, sizeof zeroIndex);
 						dataFile.write((char*)&zeroPoint, sizeof zeroPoint);
-						/*≤‚ ‘*/
-						/*for (int j = 0; j < 50; j++) {
-							cout << zeroPoint[j] << " ";
-						}
-						cout << endl;*/
 					}
 				}
 			}

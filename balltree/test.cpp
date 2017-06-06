@@ -41,19 +41,19 @@ int main() {
 
 	BallTree ball_tree1;
 	ball_tree1.buildTree(n, d, data);
-	cout << endl << endl << endl << "建树" << endl;
+	ball_tree1.storeTree(index_path);
 	// 查看建树后的结果，用于调试
 	// cout << endl << endl << endl << "建树" << endl;
 	// output(ball_tree1.root);
 
 	// ball_tree1.storeTree(index_path);
 
-	if (!read_data(qn, d, query, query_path));
-	FILE* fout = fopen(output_path, "w");
-	if (!fout) {
-		printf("can't open %s!\n", output_path);
-		return 1;
-	}
+	//if (!read_data(qn, d, query, query_path));
+	//FILE* fout = fopen(output_path, "w");
+	//if (!fout) {
+	//	printf("can't open %s!\n", output_path);
+	//	return 1;
+	//}
 
 	//BallTree ball_tree2;
 	//ball_tree2.restoreTree(index_path);

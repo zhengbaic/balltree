@@ -30,7 +30,8 @@ bool BallTree::buildTree(int n, int d, float **data) {
 	}
 	buildBall(root, n, d, points);
 	printf("Building tree completed!\n");
-	displayTree();
+	
+	// displayTree();
 
 	return true;
 }
@@ -81,7 +82,9 @@ void BallTree::buildBall(ball* &node, int n, int d, point *points) {
 }
 
 bool BallTree::storeTree(const char* index_path) {
+	printf("Storing tree ...\n");
 	openF(root, storage, index_path);
+	printf("Storing tree completed!\n");
 	return true;
 }
 
