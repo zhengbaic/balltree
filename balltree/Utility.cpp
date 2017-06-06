@@ -1,4 +1,5 @@
 #include "Utility.h"
+
 using namespace std;
 
 bool read_data(int n, int d, float** &data, const char* file_name) {
@@ -146,6 +147,8 @@ float** VectorToFloat(vector<float*> v) {
 }
 
 void openF(ball* root, map<int, point*> storage, const char* index_path) {
+	int testCount = 0;
+
 	// 索引树文件
 	ofstream outFile;
 	string tempFileName = index_path;
@@ -168,9 +171,10 @@ void openF(ball* root, map<int, point*> storage, const char* index_path) {
 
 	// 做一个点填补空项
 	int zeroIndex = -1;
-	float zeroPoint[50] = {0.0};
+	float *zeroPoint = NULL;
+	zeroPoint = new float[50];
 	for (int i = 0; i < 50; i++) {
-		zeroPoint[i] = 0.0;
+		zeroPoint[i] = 0.0f;
 	}
 
 	if (!outFile.is_open() || !dataFile.is_open()) {
@@ -182,7 +186,12 @@ void openF(ball* root, map<int, point*> storage, const char* index_path) {
 
 		while (root) {
 			Stack.push(root);
-			outFile.write((char*)&root, sizeof root);
+			outFile.write((char*)&root->bid, sizeof 4);
+			outFile.write((char*)root->CircleCenter, sizeof 4.0f * 50);
+			outFile.write((char*)&root->radius, sizeof 4.0f);
+			outFile.write((char*)&root->datanum, sizeof 4);
+			outFile.write((char*)&root->leftball, sizeof 4);
+			outFile.write((char*)&root->rightball, sizeof 4);
 			
 			// 如果是叶子结点则写入硬盘中
 			if (root->leftball == NULL && root->rightball == NULL) {
@@ -211,14 +220,25 @@ void openF(ball* root, map<int, point*> storage, const char* index_path) {
 				mapIter = storage.find(root->bid);
 				if (mapIter != storage.end()) {
 					for (int i = 0; i < root->datanum; i++) {
-						dataFile.write((char*)&mapIter->second[i].id, 4);
-						dataFile.write((char*)&mapIter->second[i].data, 4 * 50);
+						dataFile.write((char*)&mapIter->second[i].id, sizeof 4);
+						dataFile.write((char*)mapIter->second[i].data, sizeof 4.0f * 50);
+						// 测试
+						/*testCount++;
+						if (testCount <= 300) {
+							cout << "index: " << mapIter->second[i].id << endl;
+							cout << "point: [";
+							for (int j = 0; j < 50; j++) {
+								cout << mapIter->second[i].data[j] << " ";
+							}
+							cout << "]" << endl;
+						}*/
 					}
 
 					for (int i = 0; i < 20 - root->datanum; i++) {
 						dataFile.write((char*)&zeroIndex, sizeof zeroIndex);
-						dataFile.write((char*)&zeroPoint, sizeof zeroPoint);
+						dataFile.write((char*)zeroPoint, sizeof 4.0f * 50);
 					}
+
 				}
 			}
 			root = root->leftball;
@@ -231,15 +251,25 @@ void openF(ball* root, map<int, point*> storage, const char* index_path) {
 	dataFile.close();
 }
 
-void readF(ball* &root, const char* index_path) {
+int readF(ball* &root, const char* index_path) {
 	ifstream inFile;
+	int numOfBlock = 0;
 	string tempFileName = index_path;
 	tempFileName += "index.bin";
 	inFile.open(tempFileName, ios_base::in | ios_base::binary);
 	if (!inFile.is_open()) {
 		exit(EXIT_FAILURE);
 	}
-	inFile.read((char*)&root, sizeof root);
+	cout << sizeof root + 1 << endl;
+	//inFile.read((char*)&root, sizeof root + 1);
+
+	inFile.read((char*)&root->bid, sizeof 4);
+	inFile.read((char*)root->CircleCenter, sizeof 4.0f * 50);
+	inFile.read((char*)&root->radius, sizeof 4.0f);
+	inFile.read((char*)&root->datanum, sizeof 4);
+	inFile.read((char*)&root->leftball, sizeof 4);
+	inFile.read((char*)&root->rightball, sizeof 4);
+
 	ball *head = root;
 	stack<ball*> Stack;
 	bool flag = false;
@@ -247,8 +277,15 @@ void readF(ball* &root, const char* index_path) {
 
 		while (root) {
 			Stack.push(root);
+			// 计数blockNum
+			numOfBlock++;
 			if (flag) {
-				inFile.read((char*)&root, sizeof root);
+				inFile.read((char*)&root->bid, sizeof 4);
+				inFile.read((char*)root->CircleCenter, sizeof 4.0f * 50);
+				inFile.read((char*)&root->radius, sizeof 4.0f);
+				inFile.read((char*)&root->datanum, sizeof 4);
+				inFile.read((char*)&root->leftball, sizeof 4);
+				inFile.read((char*)&root->rightball, sizeof 4);
 			}
 			else {
 				flag = true;
@@ -262,8 +299,10 @@ void readF(ball* &root, const char* index_path) {
 	root = head;
 	inFile.close();
 
-	ifstream dataFile;
-	dataFile.open("page0.bin", ios_base::in | ios_base::binary);
+	/*ifstream dataFile;
+	tempFileName = index_path;
+	tempFileName += "page0.bin";
+	dataFile.open(tempFileName, ios_base::in | ios_base::binary);
 	if (!dataFile.is_open()) {
 		exit(EXIT_FAILURE);
 	}
@@ -273,20 +312,24 @@ void readF(ball* &root, const char* index_path) {
 	int count = 300;
 	while (count--) {
 		int index = 0;
-		dataFile.read((char*)index, 4);
+		dataFile.read((char*)&index, sizeof 4);
+		cout << "index: " << index << endl;
 		float *point = new float[50];
-		dataFile.read((char*)&point, 4 * 50);
+		dataFile.read((char*)point, sizeof 4.0f * 50);
 		if (point == NULL) {
 			cout << "此处是零点" << endl;
 		}
 		else {
+			cout << "point: ";
 			for (int i = 0; i < 50; i++) {
 				cout << point[i] << " ";
 			}
 			cout << endl;
 		}
 	}
-	dataFile.close();
+	dataFile.close();*/
+
+	return numOfBlock;
 }
 
 void output(ball* root) {

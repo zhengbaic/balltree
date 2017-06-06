@@ -22,6 +22,9 @@ private:
 	int numOfBlocks;
 
 	int pid;  // 当前使用页的id
+	int numOfBlock; // 块数
+
+	int target_bid;
 
 	ball *root;
 
@@ -90,6 +93,15 @@ public:
 
 	// 根据bid算出该快在page中的位置
 	int getBlockPosInPage(const int bid);
+
+	// 写入单页
+	void savePage(int pid);
+
+	ball* getRoot();
+
+	int getNumOfBlock();
+
+	void setNumOfBlock(int num);
 };
 
 #endif

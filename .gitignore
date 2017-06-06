@@ -5,3 +5,7 @@ balltree/Debug/
 balltree/x64/
 *.db
 *.bin
+
+*.db
+balltree.VC.db
+*.db
