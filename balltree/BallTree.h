@@ -94,9 +94,6 @@ public:
 	// 根据bid算出该快在page中的位置
 	int getBlockPosInPage(const int bid);
 
-	// 写入单页
-	void savePage(int pid);
-
 	ball* getRoot();
 
 	int getNumOfBlock();

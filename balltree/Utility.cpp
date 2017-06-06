@@ -260,9 +260,9 @@ int readF(ball* &root, const char* index_path) {
 	if (!inFile.is_open()) {
 		exit(EXIT_FAILURE);
 	}
-	cout << sizeof root + 1 << endl;
 	//inFile.read((char*)&root, sizeof root + 1);
-
+	root = new ball;
+	root->CircleCenter = new float[50];
 	inFile.read((char*)&root->bid, sizeof 4);
 	inFile.read((char*)root->CircleCenter, sizeof 4.0f * 50);
 	inFile.read((char*)&root->radius, sizeof 4.0f);

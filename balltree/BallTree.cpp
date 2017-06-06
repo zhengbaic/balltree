@@ -260,7 +260,7 @@ bool BallTree::insertData(int d, float* data) {
 
 	int id = mipSearch(dimesion, data);
 	if (id == 0 || target == NULL) {
-		return;
+		//return;
 	}
 
 	if (target->datanum < N0) {
@@ -329,6 +329,7 @@ int BallTree::getBlockPosInPage(const int bid) {
 	int pid = bid / BLOCKS_PER_PAGE;
 	int leftBlocksInPages = bid % BLOCKS_PER_PAGE;
 	int pos = leftBlocksInPages * BYTES_PER_BLOCK(dimesion);  // 第一个float所在的位置
+	return pos;
 }
 
 ball* BallTree::getRoot() {
