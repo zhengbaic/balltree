@@ -30,7 +30,7 @@ bool BallTree::buildTree(int n, int d, float **data) {
 	}
 	buildBall(root, n, d, points);
 	printf("Building tree completed!\n");
-	//displayTree();
+	displayTree();
 
 	return true;
 }
@@ -178,27 +178,32 @@ float BallTree::eval(int d, float* query, float Max,ball* Root) {
 	return Max;
 }
 
-//void BallTree::displayTree() {
-//	queue<ball*> tree;
-//	int count = 0;
-//	int leaf = 0;
-//	printf("=========== DISPLAY THE INDEX TREE ===========\n");
-//	if (root != NULL) tree.push(root);
-//	while (!tree.empty()) {
-//		auto node = tree.front();
-//		tree.pop();
-//		if (node->bid != -1) ++leaf;
-//		printf("NODE #%d:\t\tbid=%d\t\tdatanum=%d\n", count++, node->bid, node->datanum);
-//		if (node->leftball) tree.push(node->leftball);
-//		if (node->rightball) tree.push(node->rightball);
-//	}
-//	printf("==============================================\n");
-//	printf("TOTAL NODES: %d\n", count);
-//	printf("TOTAL LEAF NODES: %d\n", leaf);
-//}
+void BallTree::displayTree() {
+	queue<ball*> tree;
+	int count = 0;
+	int leaf = 0;
+	printf("=========== DISPLAY THE INDEX TREE ===========\n");
+	if (root != NULL) tree.push(root);
+	while (!tree.empty()) {
+		auto node = tree.front();
+		tree.pop();
+		if (node->bid != -1) ++leaf;
+		printf("NODE #%d:\t\tbid=%d\t\tdatanum=%d\n", count++, node->bid, node->datanum);
+		if (node->leftball) tree.push(node->leftball);
+		if (node->rightball) tree.push(node->rightball);
+	}
+	printf("==============================================\n");
+	printf("TOTAL NODES: %d\n", count);
+	printf("TOTAL LEAF NODES: %d\n", leaf);
+}
 
-void BallTree::loadPage(const int pid, float *page) {
+void BallTree::loadPage(const int pid) {
+	static int currPid = -1;
+
 	if (pid < 0) {
+		return;
+	}
+	if (pid == currPid) {
 		return;
 	}
 
@@ -207,46 +212,24 @@ void BallTree::loadPage(const int pid, float *page) {
 	sprintf(filename, "page%d.bin", pid);
 	fp = fopen(filename, "rb");
 	if (fp != NULL) {
-		fread(page, sizeof(float), FLOATS_PER_PAGE, fp);
+		fread(page, SIZE_OF_POINT(dimesion), POINTS_PER_PAGE, fp);
+		currPid = pid;
 	}
 }
 
 void BallTree::loadBlock(const int bid) {
-	int static curr_pid = -1;
-	int static backup_pid = -1;
+	int strPos, endPos, pid, leftBlocksInPages;
 
-	int str_pos, end_pos, str_pid, end_pid;
-	str_pos = bid * N0;  // 第一个float所在的位置
-	end_pos = str_pos + N0;  // 最后一个float所在的位置的下一位
-	str_pid = (str_pos * 4) % BYTES_PER_PAGE;
-	end_pid = (end_pos * 4) % BYTES_PER_PAGE;
+	// 计算各种参数
+	pid = bid / BLOCKS_PER_PAGE;
+	leftBlocksInPages = bid % BLOCKS_PER_PAGE;
+	strPos = leftBlocksInPages * BYTES_PER_BLOCK(dimesion);  // 第一个float所在的位置
 
 	// 从硬盘中加载page
-	if (str_pid != curr_pid) {
-		loadPage(str_pid, page);
-		curr_pid = str_pid;
-	}
-	if (end_pid != str_pid) {
-		if (end_pid != backup_pid) {
-			loadPage(end_pid, page_backup);
-			backup_pid = end_pid;
-		}
-	}
+	loadPage(pid);
 
 	// 从page中读取block
-	int count = 0;
-	if (str_pid == end_pid) {
-		for (int i = str_pos; i < end_pos; ++i) {
-			block[count++] = page[i];
-		}
-	} else {
-		for (int i = str_pos; i < FLOATS_PER_PAGE; ++i) {
-			block[count++] = page[i];
-		}
-		for (int i = 0; i < end_pos; ++i) {
-			block[count++] = page[i];
-		}
-	}
+	memcpy(block, page + strPos, BYTES_PER_BLOCK(dimesion) - 1);
 }
 
 bool BallTree::insertData(int d, float* point) {

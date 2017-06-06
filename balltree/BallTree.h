@@ -6,10 +6,11 @@
 #include <map>
 #include <queue>
 #include <cstdio>
-#define N0                20
-#define BYTES_PER_PAGE    64 * 1024
-#define FLOATS_PER_BLOCK  N0 * 50
-#define FLOATS_PER_PAGE   BYTES_PER_PAGE / 4
+#define N0                    20
+#define BYTES_PER_BLOCK(d)    N0 * ( d * 4 + 1)
+#define BLOCKS_PER_PAGE       16
+#define POINTS_PER_PAGE       N0 * BLOCKS_PER_PAGE
+#define SIZE_OF_POINT(d)      4 + 4 * d
 using namespace std;
 
 class BallTree {
@@ -24,11 +25,9 @@ private:
 
 	Quadball *Quadroot;
 
-	float page[FLOATS_PER_BLOCK];
+	point page[POINTS_PER_PAGE];
 
-	float page_backup[FLOATS_PER_BLOCK];
-
-	float block[FLOATS_PER_BLOCK];
+	point block[N0];
 public:
 	BallTree();
 
@@ -50,10 +49,6 @@ public:
 	// @author zhijian
 	int mipSearch(int d, float* query);
 
-	// 搜索，并且返回查询结果所在的叶子结点
-	// @author zhijian
-	ball *search(int d, float* query);
-
 	// @author: painterdrown
 	bool insertData(int d, float* data);
 
@@ -71,11 +66,11 @@ public:
 
 	// 按树的层次遍历并且输出
 	// @author painterdrown
-	// void displayTree();
+	void displayTree();
 
 	// 根据pid记载硬盘中相应的page
 	// @author painterdrown
-	void loadPage(const int pid, float *page);
+	void loadPage(const int pid);
 
 	// 根据bid加载相应的数据到私有成员block中
 	// @author painterdrown

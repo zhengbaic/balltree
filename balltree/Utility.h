@@ -1,10 +1,10 @@
 #ifndef __UTILITY_H
 #define __UTILITY_H
 
-#include<vector>
-#include<map>
 #include <vector>
-#include <cstdio>
+#include <map>
+#include <vector>
+#include <stdio.h>
 #include <cmath>
 #include <algorithm>
 #include <iostream>
@@ -15,7 +15,9 @@ using namespace std;
 struct point {
 	int id;
 	float* data;
+
 	point() {
+		id = -1;
 		data = NULL;
 	}
 };
@@ -43,6 +45,7 @@ struct Quadball {
 	Quadball* ball4;
 	float* CircleCenter;
 	float radius;
+
 	Quadball() {
 		radius = -1;
 		ball1 = ball2 = ball3 = ball4 = NULL;
