@@ -152,7 +152,7 @@ void openF(ball* root, map<int, point*> storage, const char* index_path) {
 	// 索引树文件
 	ofstream outFile;
 	string tempFileName = index_path;
-	tempFileName += "index.bin";
+	tempFileName += "/index.bin";
 	outFile.open(tempFileName, ios_base::out | ios_base::binary);
 	
 	// 数据文件
@@ -164,7 +164,7 @@ void openF(ball* root, map<int, point*> storage, const char* index_path) {
 	stream << pageId;
 	string temp;
 	stream >> temp;
-	string fileName = "page" + temp + ".bin";
+	string fileName = "/page" + temp + ".bin";
 	tempFileName = index_path;
 	tempFileName += fileName;
 	dataFile.open(tempFileName, ios_base::out | ios_base::binary);
@@ -208,7 +208,7 @@ void openF(ball* root, map<int, point*> storage, const char* index_path) {
 					stream << pageId;
 					string temp;
 					stream >> temp;
-					string fileName = "page" + temp + ".bin";
+					string fileName = "/page" + temp + ".bin";
 					string tempFileName = index_path;
 					tempFileName += fileName;
 					dataFile.open(tempFileName, ios_base::out | ios_base::binary);
@@ -256,7 +256,7 @@ int readF(ball* &root, const char* index_path) {
 	ifstream inFile;
 	int numOfBlock = 0;
 	string tempFileName = index_path;
-	tempFileName += "index.bin";
+	tempFileName += "/index.bin";
 	inFile.open(tempFileName, ios_base::in | ios_base::binary);
 	if (!inFile.is_open()) {
 		exit(EXIT_FAILURE);
