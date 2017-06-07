@@ -41,7 +41,7 @@ public:
 
 	// @author sysuzzy
 	bool restoreTree(const char* index_path);
-	
+
 	// 搜索，并且返回查询向量的id
 	// @author zhijian
 	int mipSearch(int d, float* query);

@@ -38,7 +38,6 @@ struct Ball {
 	~Ball() {
 		// clear();
 	}
-
 	void removeRecursively(Ball *ball) {
 		if (ball == NULL) {
 			return;
@@ -132,7 +131,6 @@ struct Block {
 	// 成员变量
 	int bid;
 	int pid;
-	bool initialized;
 	Point *points;
 	// 成员函数
 	Block();
@@ -144,7 +142,6 @@ struct Block {
 struct Page {
 	// 成员变量
 	int pid;
-	bool initialized;
 	Block *blocks;
 	// 成员函数
 	Page();

@@ -9,9 +9,7 @@ int BLOCKS_PER_PAGE;
 
 Block::Block() {
 	bid = pid = -1;
-	initialized = false;
 	points = NULL;
-	init();
 }
 
 Block::~Block() {
@@ -30,17 +28,14 @@ void Block::init() {
 	for (int i = 0; i < N0; ++i) {
 		points[i].data = new float[DIMENSION] {0.0f};
 	}
-	initialized = true;
 }
-
-// ====================================
 
 // =========== Page Struct ===========
 
 Page::Page() {
-	initialized = false;
 	pid = -1;
 	blocks = NULL;
+	init();
 }
 
 Page::~Page() {
@@ -62,7 +57,6 @@ void Page::init() {
 			blocks[i].points->data = new float[DIMENSION] {0.0f};
 		}
 	}
-	initialized = true;
 }
 
 void Page::saveToDisk() {
@@ -87,10 +81,6 @@ void Page::saveToDisk() {
 void Page::loadFromDisk(const int pid) {
 	if (pid == -1) {
 		return;
-	}
-
-	if (!initialized) {
-		init();
 	}
 
 	// 早已经加载好了的，直接返回

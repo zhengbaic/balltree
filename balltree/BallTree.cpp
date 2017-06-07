@@ -39,6 +39,8 @@ bool BallTree::buildTree(int n, int d, float **data) {
 	initConstants(d);  // 初始化Utility中的常量
 	dimesion = d;
 	num = n;
+	block.init();
+	page.init();
 
 	printf("Building tree ...\n");
 	Point* points = new Point[n];
@@ -192,8 +194,8 @@ int BallTree::mipSearch(int d,float* query) {
 float BallTree::eval(int d, float* query, float Max, Ball* Root) {
 	float temp = 0.0f;
 	if (Root->leftball == NULL && Root->rightball == NULL) {
+		loadBlock(Root);
 		for (int i = 0; i <= Root->datanum; i++) {
-			loadBlock(Root);
 			temp = getInnerproduct(d, query, block.points[i].data);
 			if (Max < temp) {
 				Max = temp;
