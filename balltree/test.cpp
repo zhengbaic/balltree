@@ -49,6 +49,7 @@ int main() {
 		int index = ball_tree1.mipSearch(d, query[i]);
 		fprintf(fout, "%d\n", index);
 	}
+
 	//fclose(fout);
 
 	//for (int i = 0; i < n; i++) {
