@@ -15,12 +15,13 @@ private:
 	int num;  // 记录的总数量
 	int numOfBlocks;  // 用于生成新的Block
 	int targetid;
+	int pid;
 	Ball *root;
 	Ball *targetball;
 	Quadball *Quadroot;
-	Page page;
 	Block block;
 	string index_path;
+	map<int, Page> pages;
 public:
 	BallTree();
 

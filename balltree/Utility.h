@@ -130,8 +130,8 @@ struct Point {
 
 struct Block {
 	// 成员变量
-	int bid;
-	int pid;
+	int pid;  // 在哪一页
+	int offset;  // 在页的第几块
 	Point *points;
 	// 成员函数
 	Block();

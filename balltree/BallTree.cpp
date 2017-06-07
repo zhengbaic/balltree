@@ -201,7 +201,7 @@ int BallTree::mipSearch(int d,float* query) {
 	if (Max < getMax(d,query, root->rightball)) {
 		eval(d, query, Max, root->rightball);
 	}
-	return targetid;  // 这里需要改！
+	return targetid;
 }
 
 float BallTree::eval(int d, float* query, float Max, Ball* Root) {
@@ -438,7 +438,15 @@ void BallTree::loadBlock(Ball *ball) {
 		return;
 	}
 
-	page.loadFromDisk(ball->pid, index_path);
+	// 如果目标页不在内存中
+	if (pages.find(ball->pid) == pages.end()) {
+		page.loadFromDisk(ball->pid, index_path);
+		pages[ball->pid] = page;
+	} else {
+		page = pages[ball->pid];
+		page.pid = 
+	}
+
 	for (int i = 0; i < BLOCKS_PER_PAGE; ++i) {
 		if (page.blocks[i].bid == ball->bid) {
 			for (int j = 0; j < N0; ++j) {
