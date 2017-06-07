@@ -17,7 +17,9 @@ BallTree::BallTree() {
 
 BallTree::~BallTree() {
 	// 将更新的页面保存到硬盘
-	savePage(pid);
+	if (pid != -1) {
+		savePage(pid);
+	}
 
 	// delete掉，免得内存泄漏
 	for (auto i : storage) {

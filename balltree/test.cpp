@@ -52,10 +52,10 @@ int main() {
 	//	printf("can't open %s!\n", output_path);
 	//	return 1;
 	//}
-	cout << sizeof 4.0f * 50 << endl;
-	BallTree ball_tree2;
-	ball_tree2.restoreTree(index_path);
-	cout << "finish" << endl;
+	//cout << sizeof 4.0f * 50 << endl;
+	//BallTree ball_tree2;
+	//ball_tree2.restoreTree(index_path);
+	//cout << "finish" << endl;
 	// 查看读取文件后的结果，用于调试
 	/*cout << endl << endl << endl << "文件读取" << endl;
 	output(ball_tree2.root);

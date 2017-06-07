@@ -1,11 +1,7 @@
+*.db
+*.bin
 .vs/
 Debug/
 x64/
 balltree/Debug/
 balltree/x64/
-*.db
-*.bin
-
-*.db
-balltree.VC.db
-*.db

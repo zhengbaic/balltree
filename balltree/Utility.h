@@ -23,9 +23,6 @@ struct point {
 		data = NULL;
 		id = -1;
 	}
-	~point() {
-		delete data;
-	}
 };
 
 struct ball {
