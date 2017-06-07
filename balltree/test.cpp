@@ -43,8 +43,8 @@ int main() {
 	//	return 1;
 	//}
 
-	//BallTree ball_tree2;
-	//ball_tree2.restoreTree(index_path);
+	BallTree ball_tree2;
+	ball_tree2.restoreTree(index_path);
 	//for (int i = 0; i < qn; i++) {
 	//	int index = ball_tree2.mipSearch(d, query[i]);
 	//	fprintf(fout, "%d\n", index);

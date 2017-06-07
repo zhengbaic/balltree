@@ -315,8 +315,7 @@ void openF(Ball* root, map<int, Point*> storage, const char* index_path) {
 			
 			// 如果是叶子结点则写入硬盘中
 			if (root->leftball == NULL && root->rightball == NULL) {
-
-				count++;
+				count++;  // 给每一页的数据块计数，一页的数据块不超过16个
 				// 分页并初始化
 				if (count >= 16) {
 					dataFile.close();
@@ -381,7 +380,7 @@ int readF(Ball* &root, const char* index_path) {
 		exit(EXIT_FAILURE);
 	}
 	//inFile.read((char*)&root, sizeof root + 1);
-	root = new Ball;
+	root = new Ball();
 	root->center = new float[50];
 	inFile.read((char*)&root->bid, sizeof 4);
 	inFile.read((char*)root->center, sizeof 4.0f * 50);
@@ -394,6 +393,10 @@ int readF(Ball* &root, const char* index_path) {
 	Ball *head = root;
 	stack<Ball*> Stack;
 	bool flag = false;
+
+	// 测试
+	int countTimes = 0;
+
 	while (root || !Stack.empty()) {
 
 		while (root) {
@@ -401,6 +404,7 @@ int readF(Ball* &root, const char* index_path) {
 			// 计数blockNum
 			numOfBlock++;
 			if (flag) {
+				root->center = new float[50];
 				inFile.read((char*)&root->bid, sizeof 4);
 				inFile.read((char*)root->center, sizeof 4.0f * 50);
 				inFile.read((char*)&root->radius, sizeof 4.0f);
@@ -412,11 +416,39 @@ int readF(Ball* &root, const char* index_path) {
 			else {
 				flag = true;
 			}
-			root = root->leftball;
+			// 测试
+			if (countTimes < 100) {
+				countTimes++;
+				cout << root->radius << endl;
+			}
+			
+			if (root->leftball != NULL) {
+				root->leftball = new Ball();
+				if (root == head) {
+					head->leftball = root->leftball;
+				}
+				Ball* parent = root;
+				root = root->leftball;
+				root->parent = parent;
+			}
+			else {
+				root = NULL;
+			}
 		}
 		root = Stack.top();
 		Stack.pop();
-		root = root->rightball;
+		if (root->rightball != NULL) {
+			root->rightball = new Ball();
+			if (root == head) {
+				head->rightball = root->rightball;
+			}
+			Ball* parent = root;
+			root = root->rightball;
+			root->parent = parent;
+		}
+		else {
+			root = NULL;
+		}
 	}
 	root = head;
 	inFile.close();

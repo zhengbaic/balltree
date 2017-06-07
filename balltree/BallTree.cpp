@@ -56,6 +56,9 @@ bool BallTree::buildTree(int n, int d, float **data) {
 	return true;
 }
 
+// 测试
+int countTimes = 0;
+
 void BallTree::buildBall(Ball* &node, int n, int d, Point *points) {
 	static int bid = 0;
 	static vector<Ball*> balls;
@@ -68,6 +71,13 @@ void BallTree::buildBall(Ball* &node, int n, int d, Point *points) {
 		}
 	}
 	analyse(node, n, d, data);  // 得到圆心跟半径（Utility.cpp）
+
+	// 测试
+	if (countTimes < 100) {
+		countTimes++;
+		cout << node->radius << endl;
+	}
+	
 	if (n <= N0) {
 		// 叶子
 		storage.insert(map<int, Point*>::value_type(bid, points));
