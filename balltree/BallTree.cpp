@@ -1,5 +1,10 @@
 ﻿#include "BallTree.h"
 
+extern int DIMENSION;
+extern int SIZE_OF_POINT;
+extern int BYTES_PER_BLOCK;
+extern int BLOCKS_PER_PAGE;
+
 // 全局变量
 map<int, Point*> storage;
 
@@ -416,5 +421,13 @@ void BallTree::loadBlock(Ball *ball) {
 		return;
 	}
 
-	block.loadFromPage(&page, ball);
+	page.loadFromDisk(ball->pid);
+	for (int i = 0; i < BLOCKS_PER_PAGE; ++i) {
+		if (page.blocks[i].bid == ball->bid) {
+			for (int j = 0; j < N0; ++j) {
+				block.points[j].id = page.blocks[i].points[j].id;
+				memcpy(block.points[j].data, page.blocks[i].points[j].data, sizeof(float) * DIMENSION);
+			}
+		}
+	}
 }

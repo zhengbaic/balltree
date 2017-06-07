@@ -1,5 +1,123 @@
 #include "Utility.h"
 
+int DIMENSION;
+int SIZE_OF_POINT;
+int BYTES_PER_BLOCK;
+int BLOCKS_PER_PAGE;
+
+// =========== Block Struct ===========
+
+Block::Block() {
+	bid = pid = -1;
+	initialized = false;
+	points = NULL;
+	init();
+}
+
+Block::~Block() {
+	// clear();
+}
+
+void Block::clear() {
+	bid = pid = -1;
+	if (points != NULL) {
+		delete[] points;
+	}
+}
+
+void Block::init() {
+	points = new Point[N0];
+	for (int i = 0; i < N0; ++i) {
+		points[i].data = new float[DIMENSION] {0.0f};
+	}
+	initialized = true;
+}
+
+// ====================================
+
+// =========== Page Struct ===========
+
+Page::Page() {
+	initialized = false;
+	pid = -1;
+	blocks = NULL;
+}
+
+Page::~Page() {
+	// clear();
+}
+
+void Page::clear() {
+	pid = -1;
+	if (blocks != NULL) {
+		delete[] blocks;
+	}
+}
+
+void Page::init() {
+	blocks = new Block[BLOCKS_PER_PAGE];
+	for (int i = 0; i < BLOCKS_PER_PAGE; ++i) {
+		blocks[i].points = new Point[N0];
+		for (int j = 0; j < DIMENSION; ++j) {
+			blocks[i].points->data = new float[DIMENSION] {0.0f};
+		}
+	}
+	initialized = true;
+}
+
+void Page::saveToDisk() {
+	stringstream stream;
+	stream << pid;
+	string temp;
+	stream >> temp;
+	string fileName = "page" + temp + ".bin";
+	ofstream dataFile;
+	dataFile.open(fileName, ios_base::out | ios_base::binary);
+	if (!dataFile.is_open()) {
+		exit(EXIT_FAILURE);
+	}
+	for (int i = 0; i < BLOCKS_PER_PAGE; ++i) {
+		dataFile.write((char*)&blocks[i].bid, sizeof(int));
+		for (int j = 0; j < N0; ++j) {
+			dataFile.write((char*)blocks[i].points[j].data, sizeof(int) * DIMENSION);
+		}
+	}
+}
+
+void Page::loadFromDisk(const int pid) {
+	if (pid == -1) {
+		return;
+	}
+
+	if (!initialized) {
+		init();
+	}
+
+	// 早已经加载好了的，直接返回
+	if (pid == this->pid) {
+		return;
+	}
+
+	FILE *fp;
+	char filename[L];
+	sprintf(filename, "page%d.bin", pid);
+	fp = fopen(filename, "rb");
+	if (fp == NULL) {
+		return;
+	}
+	for (int i = 0; i < BLOCKS_PER_PAGE; ++i) {
+		blocks[i].pid = pid;
+		fread(&blocks[i].bid, sizeof(int), 1, fp);
+		for (int j = 0; j < N0; ++j) {
+			fread(&blocks[i].points[j].id, sizeof(int), 1, fp);
+			fread(blocks[i].points[j].data, sizeof(float), DIMENSION, fp);
+		}
+	}
+	this->pid = pid;
+}
+
+// ===================================
+
 void initConstants(const int d) {
 	DIMENSION = d;
 	SIZE_OF_POINT = 4 + 4 * DIMENSION;

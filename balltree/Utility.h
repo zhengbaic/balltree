@@ -17,11 +17,6 @@ using namespace std;
 #define N0                    20
 #define BYTES_PER_PAGE        65536
 
-int DIMENSION;
-int SIZE_OF_POINT;
-int BYTES_PER_BLOCK;
-int BLOCKS_PER_PAGE;
-
 struct Ball {
 	Ball* parent;
 	Ball* leftball;
@@ -40,8 +35,8 @@ struct Ball {
 		pid = bid = -1;
 	}
 
-	Ball() {
-		clear();
+	~Ball() {
+		// clear();
 	}
 
 	void removeRecursively(Ball *ball) {
@@ -88,8 +83,8 @@ struct Quadball {
 		ball1 = ball2 = ball3 = ball4 = NULL;
 	}
 
-	Quadball() {
-		clear();
+	~Quadball() {
+		// clear();
 	}
 
 	void removeRecursively(Quadball *ball) {
@@ -122,7 +117,7 @@ struct Point {
 	}
 
 	~Point() {
-		clear();
+		// clear();
 	}
 
 	void clear() {
@@ -134,141 +129,30 @@ struct Point {
 };
 
 struct Block {
+	// 成员变量
 	int bid;
 	int pid;
 	bool initialized;
 	Point *points;
-
-	Block() {
-		bid = pid = -1;
-		initialized = false;
-		points = NULL;
-	}
-
-	Block() {
-		clear();
-	}
-
-	void clear() {
-		bid = pid = -1;
-		if (points != NULL) {
-			delete[] points;
-		}
- 	}
-
-	void init() {
-		points = new Point[N0];
-		for (int i = 0; i < N0; ++i) {
-			points[i].data = new float[DIMENSION] {0.0f};
-		}
-		initialized = true;
-	}
-
-	void loadFromPage(Page *page, Ball *ball) {
-		if (page == NULL || ball == NULL) {
-			return;
-		}
-
-		if (!initialized) {
-			init();
-		}
-
-		page->loadFromDisk(ball->pid);
-		for (int i = 0; i < BLOCKS_PER_PAGE; ++i) {
-			if (page->blocks[i].bid == ball->bid) {
-				for (int j = 0; j < N0; ++j) {
-					points[j].id = page->blocks[i].points[j].id;
-					memcpy(points[j].data, page->blocks[i].points[j].data, sizeof(float) * DIMENSION);
-				}
-			}
-		}
-	}
+	// 成员函数
+	Block();
+	~Block();
+	void clear();
+	void init();
 };
 
 struct Page {
+	// 成员变量
 	int pid;
 	bool initialized;
 	Block *blocks;
-
-	Page() {
-		initialized = false;
-		pid = -1;
-		blocks = NULL;
-	}
-
-	Page() {
-		clear();
-	}
-
-	void clear() {
-		pid = -1;
-		if (blocks != NULL) {
-			delete[] blocks;
-		}
-	}
-
-	// 为一整张页开好空间
-	void init() {
-		blocks = new Block[BLOCKS_PER_PAGE];
-		for (int i = 0; i < BLOCKS_PER_PAGE; ++i) {
-			blocks[i].points = new Point[N0];
-			for (int j = 0; j < DIMENSION; ++j) {
-				blocks[i].points->data = new float[DIMENSION] {0.0f};
-			}
-		}
-		initialized = true;
-	}
-
-	void saveToDisk() {
-		stringstream stream;
-		stream << pid;
-		string temp;
-		stream >> temp;
-		string fileName = "page" + temp + ".bin";
-		ofstream dataFile;
-		dataFile.open(fileName, ios_base::out | ios_base::binary);
-		if (!dataFile.is_open()) {
-			exit(EXIT_FAILURE);
-		}
-		for (int i = 0; i < BLOCKS_PER_PAGE; ++i) {
-			dataFile.write((char*)&blocks[i].bid, sizeof(int));
-			for (int j = 0; j < N0; ++j) {
-				dataFile.write((char*)blocks[i].points[j].data, sizeof(int) * DIMENSION);
-			}
-		}
-	}
-
-	void loadFromDisk(const int pid) {
-		if (pid == -1) {
-			return;
-		}
-
-		if (!initialized) {
-			init();
-		}
-
-		// 早已经加载好了的，直接返回
-		if (pid == this->pid) {
-			return;
-		}
-
-		FILE *fp;
-		char filename[L];
-		sprintf(filename, "page%d.bin", pid);
-		fp = fopen(filename, "rb");
-		if (fp == NULL) {
-			return;
-		}
-		for (int i = 0; i < BLOCKS_PER_PAGE; ++i) {
-			blocks[i].pid = pid;
-			fread(&blocks[i].bid, sizeof(int), 1, fp);
-			for (int j = 0; j < N0; ++j) {
-				fread(&blocks[i].points[j].id, sizeof(int), 1, fp);
-				fread(blocks[i].points[j].data, sizeof(float), DIMENSION, fp);
-			}
-		}
-		this->pid = pid;
-	}
+	// 成员函数
+	Page();
+	~Page();
+	void clear();
+	void init();  // 为一整张页开好空间
+	void saveToDisk();
+	void loadFromDisk(const int pid);
 };
 
 void initConstants(const int d);
@@ -308,6 +192,5 @@ void displayCenter(float* f, int d);
 float getLength(int d, float* query);
 
 float getInnerproduct(int d, float * query, float * vec);
-
 
 #endif

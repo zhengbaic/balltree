@@ -5,13 +5,6 @@
 
 #define MNIST
 
-#ifdef Netflix
-char dataset[L] = "Netflix";
-int n = 200;
-int	d = 50;
-int qn = 1000;
-#endif // Netflix
-
 #ifdef MNIST
 char dataset[L] = "Mnist";
 int n = 60000, d = 50;
@@ -42,9 +35,6 @@ int main() {
 	BallTree ball_tree1;
 	ball_tree1.buildTree(n, d, data);
 	ball_tree1.storeTree(index_path);
-	// 查看建树后的结果，用于调试
-	// cout << endl << endl << endl << "建树" << endl;
-	// output(ball_tree1.getRoot());
 
 	//if (!read_data(qn, d, query, query_path));
 	//FILE* fout = fopen(output_path, "w");
@@ -52,28 +42,22 @@ int main() {
 	//	printf("can't open %s!\n", output_path);
 	//	return 1;
 	//}
-	//cout << sizeof 4.0f * 50 << endl;
+
 	//BallTree ball_tree2;
 	//ball_tree2.restoreTree(index_path);
-	//cout << "finish" << endl;
-	// 查看读取文件后的结果，用于调试
-	/*cout << endl << endl << endl << "文件读取" << endl;
-	output(ball_tree2.root);
-	cout << "finish" << endl;*/
-
-
 	//for (int i = 0; i < qn; i++) {
 	//	int index = ball_tree2.mipSearch(d, query[i]);
 	//	fprintf(fout, "%d\n", index);
 	//}
 	//fclose(fout);
 
-	/*for (int i = 0; i < n; i++) {
-		delete[] data[i];
-	}
+	//for (int i = 0; i < n; i++) {
+	//	delete[] data[i];
+	//}
 
-	for (int i = 0; i < qn; i++) {
-		delete[] query[i];
-	}*/
+	//for (int i = 0; i < qn; i++) {
+	//	delete[] query[i];
+	//}
+
 	return 0;
 }
