@@ -11,6 +11,7 @@
 #include <iostream>
 #include <fstream>
 #include <sstream>
+#include <string>
 using namespace std;
 
 #define L                     20
@@ -149,7 +150,7 @@ struct Page {
 	void clear();
 	void init();  // 为一整张页开好空间
 	void saveToDisk();
-	void loadFromDisk(const int pid);
+	void loadFromDisk(const int pid, const string index_path);
 };
 
 void initConstants(const int d);
@@ -174,9 +175,9 @@ Point* vectorToPoint(vector<Point> v);
 
 float** vectorToFloat(vector<float*> v);
 
-void openF(Ball* root, map<int, Point*> storage, const char* index_path);
+void openF(Ball* root, map<int, Point*> storage, const char* index_path, int dim);
 
-int readF(Ball* &root, const char* index_path);
+int readF(Ball* &root, const char* index_path, int &dim);
 
 float getMax(int d, float* query, Ball* Root);
 

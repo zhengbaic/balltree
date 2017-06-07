@@ -36,6 +36,7 @@ int main() {
 	ball_tree1.buildTree(n, d, data);
 	ball_tree1.storeTree(index_path);
 
+
 	if (!read_data(qn, d, query, query_path));
 	FILE* fout = fopen(output_path, "w");
 	if (!fout) {
@@ -43,10 +44,10 @@ int main() {
 		return 1;
 	}
 
-	//BallTree ball_tree2;
-	//ball_tree2.restoreTree(index_path);
+	BallTree ball_tree2;
+	ball_tree2.restoreTree(index_path);
 	for (int i = 0; i < qn; i++) {
-		int index = ball_tree1.mipSearch(d, query[i]);
+		int index = ball_tree2.mipSearch(d, query[i]);
 		fprintf(fout, "%d\n", index);
 	}
 

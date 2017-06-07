@@ -7,6 +7,8 @@ extern int BLOCKS_PER_PAGE;
 
 // 全局变量
 map<int, Point*> storage;
+// 测试
+int countTimes = 0;
 
 BallTree::BallTree() {
 	dimesion = 0;
@@ -57,9 +59,6 @@ bool BallTree::buildTree(int n, int d, float **data) {
 	
 	return true;
 }
-
-// 测试
-int countTimes = 0;
 
 void BallTree::buildBall(Ball* &node, int n, int d, Point *points) {
 	static int bid = 0;
@@ -175,16 +174,20 @@ void BallTree::buildQuadBall(Quadball* &node, int n, int d, float **data) {
 }
 
 bool BallTree::storeTree(const char* index_path) {
+	this->index_path = string(index_path);
 	printf("Storing tree ...\n");
-	openF(root, storage, index_path);
+	openF(root, storage, index_path, dimesion);
 	printf("Storing tree completed!\n");
 	return true;
 }
 
 bool BallTree::restoreTree(const char* index_path) {
+	this->index_path = string(index_path);
 	printf("Restoring tree ...\n");
-	numOfBlocks = readF(root, index_path);
+	numOfBlocks = readF(root, index_path, dimesion);
 	printf("Restoring tree completed!\n");
+	block.init();
+	page.init();
 	return true;
 }
 
@@ -198,14 +201,14 @@ int BallTree::mipSearch(int d,float* query) {
 	if (Max < getMax(d,query, root->rightball)) {
 		eval(d, query, Max, root->rightball);
 	}
-	return -1;  // 这里需要改！
+	return targetid;  // 这里需要改！
 }
 
 float BallTree::eval(int d, float* query, float Max, Ball* Root) {
 	float temp = 0.0f;
 	if (Root->leftball == NULL && Root->rightball == NULL) {
 		loadBlock(Root);
-		for (int i = 0; i <= Root->datanum; i++) {
+		for (int i = 0; i < Root->datanum; i++) {
 			temp = getInnerproduct(d, query, block.points[i].data);
 			if (Max < temp) {
 				Max = temp;
@@ -231,8 +234,10 @@ void BallTree::displayTree() {
 	while (!tree.empty()) {
 		auto node = tree.front();
 		tree.pop();
-		if (node->bid != -1) ++leaf;
-		printf("NODE #%d:\t\tbid=%d\t\tdatanum=%d\n", count++, node->bid, node->datanum);
+		if (node->bid != -1) {
+			++leaf;
+			printf("NODE #%d:\t\tbid=%d\t\tdatanum=%d\n", count++, node->bid, node->datanum);
+		}
 		if (node->leftball) tree.push(node->leftball);
 		if (node->rightball) tree.push(node->rightball);
 	}
@@ -287,7 +292,7 @@ bool BallTree::insertData(int d, float* data) {
 		Point *points = new Point[N0 + 1];
 
 		// 将原来节点上的points放到新的point数组里面
-		page.loadFromDisk(targetball->pid);
+		page.loadFromDisk(targetball->pid, index_path);
 		loadBlock(targetball);
 		for (int i = 0; i < targetball->datanum; ++i) {
 			points[i].id = block.points[i].id;
@@ -346,7 +351,7 @@ bool BallTree::insertData(int d, float* data) {
 			page.pid = numOfBlocks / BLOCKS_PER_PAGE;
 		} else {
 			// 加载最后一张page并且将右节点的数据放到里面
-			page.loadFromDisk(numOfBlocks / BLOCKS_PER_PAGE);
+			page.loadFromDisk(numOfBlocks / BLOCKS_PER_PAGE, index_path);
 			int pos = numOfBlocks % BLOCKS_PER_PAGE;
 			for (int i = 0; i < temp->leftball->datanum; ++i) {
 				page.blocks[pos].points[i].id = leftpoints[i].id;
@@ -374,7 +379,7 @@ bool BallTree::deleteData(int d, float* data) {
 
 	// 如果要删除数据所在的叶子只有它一个数据
 	if (targetball->datanum == 1) {
-		page.loadFromDisk(targetball->pid);
+		page.loadFromDisk(targetball->pid, index_path);
 		if (targetball == root) {
 			root->clear();
 		} else if (targetball->parent == root) {
@@ -405,7 +410,7 @@ bool BallTree::deleteData(int d, float* data) {
 		targetball->clear();
 	} else {
 		targetball->datanum--;
-		page.loadFromDisk(targetball->pid);
+		page.loadFromDisk(targetball->pid, index_path);
 		int pos = -1;
 		for (int i = 0; i < BLOCKS_PER_PAGE; ++i) {
 			if (page.blocks[i].bid == targetball->bid) {
@@ -433,13 +438,14 @@ void BallTree::loadBlock(Ball *ball) {
 		return;
 	}
 
-	page.loadFromDisk(ball->pid);
+	page.loadFromDisk(ball->pid, index_path);
 	for (int i = 0; i < BLOCKS_PER_PAGE; ++i) {
 		if (page.blocks[i].bid == ball->bid) {
 			for (int j = 0; j < N0; ++j) {
 				block.points[j].id = page.blocks[i].points[j].id;
 				memcpy(block.points[j].data, page.blocks[i].points[j].data, sizeof(float) * DIMENSION);
 			}
+			break;
 		}
 	}
 }

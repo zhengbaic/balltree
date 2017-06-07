@@ -6,6 +6,7 @@
 #include <map>
 #include <queue>
 #include <cstdio>
+#include <string>
 using namespace std;
 
 class BallTree {
@@ -19,6 +20,7 @@ private:
 	Quadball *Quadroot;
 	Page page;
 	Block block;
+	string index_path;
 public:
 	BallTree();
 

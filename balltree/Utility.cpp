@@ -53,8 +53,8 @@ void Page::init() {
 	blocks = new Block[BLOCKS_PER_PAGE];
 	for (int i = 0; i < BLOCKS_PER_PAGE; ++i) {
 		blocks[i].points = new Point[N0];
-		for (int j = 0; j < DIMENSION; ++j) {
-			blocks[i].points->data = new float[DIMENSION] {0.0f};
+		for (int j = 0; j < N0; ++j) {
+			blocks[i].points[j].data = new float[DIMENSION] {0.0f};
 		}
 	}
 }
@@ -78,7 +78,7 @@ void Page::saveToDisk() {
 	}
 }
 
-void Page::loadFromDisk(const int pid) {
+void Page::loadFromDisk(const int pid, const string index_path) {
 	if (pid == -1) {
 		return;
 	}
@@ -90,8 +90,9 @@ void Page::loadFromDisk(const int pid) {
 
 	FILE *fp;
 	char filename[L];
-	sprintf(filename, "page%d.bin", pid);
-	fp = fopen(filename, "rb");
+	sprintf(filename, "/page%d.bin", pid);
+	string filepath = index_path + filename;
+	fp = fopen(filepath.c_str(), "rb");
 	if (fp == NULL) {
 		return;
 	}
@@ -255,9 +256,9 @@ float** vectorToFloat(vector<float*> v) {
 	return res;
 }
 
-void openF(Ball* root, map<int, Point*> storage, const char* index_path) {
+void openF(Ball* root, map<int, Point*> storage, const char* index_path, int dim) {
 	int testCount = 0;
-
+	
 	// 索引树文件
 	ofstream outFile;
 	string tempFileName = index_path;
@@ -289,12 +290,13 @@ void openF(Ball* root, map<int, Point*> storage, const char* index_path) {
 	if (!outFile.is_open() || !dataFile.is_open()) {
 		exit(EXIT_FAILURE);
 	}
-
+	outFile.write((char*)&dim, sizeof 4);
 	stack<Ball*> Stack;
 	while (root || !Stack.empty()) {
 
 		while (root) {
 			Stack.push(root);
+			outFile.write((char*)&pageId, sizeof 4);
 			outFile.write((char*)&root->bid, sizeof 4);
 			outFile.write((char*)root->center, sizeof 4.0f * 50);
 			outFile.write((char*)&root->radius, sizeof 4.0f);
@@ -324,10 +326,12 @@ void openF(Ball* root, map<int, Point*> storage, const char* index_path) {
 						exit(EXIT_FAILURE);
 					}
 				}
+				root->pid = pageId;
 
 				// 数据写入硬盘，不够位的用0点填补
 				mapIter = storage.find(root->bid);
 				if (mapIter != storage.end()) {
+					dataFile.write((char*)&root->bid, sizeof 4);
 					for (int i = 0; i < root->datanum; i++) {
 						dataFile.write((char*)&mapIter->second[i].id, sizeof 4);
 						dataFile.write((char*)mapIter->second[i].data, sizeof 4.0f * 50);
@@ -360,7 +364,7 @@ void openF(Ball* root, map<int, Point*> storage, const char* index_path) {
 	dataFile.close();
 }
 
-int readF(Ball* &root, const char* index_path) {
+int readF(Ball* &root, const char* index_path, int &dim) {
 	ifstream inFile;
 	int numOfBlock = 0;
 	string tempFileName = index_path;
@@ -369,9 +373,10 @@ int readF(Ball* &root, const char* index_path) {
 	if (!inFile.is_open()) {
 		exit(EXIT_FAILURE);
 	}
-	//inFile.read((char*)&root, sizeof root + 1);
+	inFile.read((char*)&dim, sizeof 4);
 	root = new Ball();
 	root->center = new float[50];
+	inFile.read((char*)&root->pid, sizeof 4);
 	inFile.read((char*)&root->bid, sizeof 4);
 	inFile.read((char*)root->center, sizeof 4.0f * 50);
 	inFile.read((char*)&root->radius, sizeof 4.0f);
@@ -395,6 +400,7 @@ int readF(Ball* &root, const char* index_path) {
 			numOfBlock++;
 			if (flag) {
 				root->center = new float[50];
+				inFile.read((char*)&root->pid, sizeof 4);
 				inFile.read((char*)&root->bid, sizeof 4);
 				inFile.read((char*)root->center, sizeof 4.0f * 50);
 				inFile.read((char*)&root->radius, sizeof 4.0f);
