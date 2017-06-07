@@ -31,8 +31,6 @@ bool BallTree::buildTree(int n, int d, float **data) {
 	initConstants(d);  // 初始化Utility中的常量
 	dimesion = d;
 	num = n;
-	block.init();
-	page.init();
 
 	printf("Building tree ...\n");
 	Point* points = new Point[n];
@@ -72,7 +70,6 @@ void BallTree::buildBall(Ball* &node, int n, int d, Point *points) {
 	if (n <= N0) {
 		// 叶子
 		storage.insert(map<int, Point*>::value_type(bid, points));
-		node->bid = bid;
 		balls.push_back(node);
 		node->datanum = n;
 		bid++;
@@ -109,7 +106,7 @@ bool BallTree::buildQuadTree(int n, int d, float ** data)
 	dimesion = d;
 	num = n;
 	printf("Building QuadTree ...\n");
-	buildQuadBall(Quadroot, n, d, data);
+	buildQuadBall(quadroot, n, d, data);
 	printf("Building QuadTree completed!\n");
 	return true;
 }
@@ -184,8 +181,6 @@ bool BallTree::restoreTree(const char* index_path) {
 	printf("Restoring tree ...\n");
 	numOfBlocks = readF(root, index_path, dimesion);
 	printf("Restoring tree completed!\n");
-	block.init();
-	page.init();
 	return true;
 }
 
@@ -205,13 +200,13 @@ int BallTree::mipSearch(int d,float* query) {
 float BallTree::eval(int d, float* query, float Max, Ball* Root) {
 	float temp = 0.0f;
 	if (Root->leftball == NULL && Root->rightball == NULL) {
-		loadBlock(Root);
+		loadBlock(Root->pid, Root->offset);
 		for (int i = 0; i < Root->datanum; i++) {
-			temp = getInnerproduct(d, query, block.points[i].data);
+			temp = getInnerproduct(d, query, pages[targetball->pid].blocks[targetball->offset].points[i].data);
 			if (Max < temp) {
 				Max = temp;
 				targetball = Root;
-				targetid = block.points[i].id;
+				targetid = pages[targetball->pid].blocks[targetball->offset].points[i].id;
 			}
 		}
 		return Max;
@@ -232,9 +227,9 @@ void BallTree::displayTree() {
 	while (!tree.empty()) {
 		auto node = tree.front();
 		tree.pop();
-		if (node->bid != -1) {
+		if (node->datanum <= 0) {
 			++leaf;
-			printf("NODE #%d:\t\tbid=%d\t\tdatanum=%d\n", count++, node->bid, node->datanum);
+			// printf("NODE #%d:\t\tbid=%d\t\tdatanum=%d\n", count++, node->bid, node->datanum);
 		}
 		if (node->leftball) tree.push(node->leftball);
 		if (node->rightball) tree.push(node->rightball);
@@ -244,208 +239,205 @@ void BallTree::displayTree() {
 	printf("TOTAL LEAF NODES: %d\n", leaf);
 }
 
-bool BallTree::insertData(int d, float* data) {
-	if (data == NULL) {
-		return false;
-	}
+//bool BallTree::insertData(int d, float* data) {
+//	if (data == NULL) {
+//		return false;
+//	}
+//
+//	// 找到要插入的节点在哪
+//	int id = mipSearch(dimesion, data);
+//	if (id == -1 || targetball == NULL) {
+//		return false;
+//	}
+//
+//	// 去看看是否需要修改父节点们的半径
+//	float distance = getDistanse(data, targetball->center, dimesion);
+//	if (distance > targetball->radius) {
+//		targetball->radius = distance;
+//		Ball *parent = targetball->parent;
+//		while (parent != NULL) {
+//			float distance = getDistanse(data, parent->center, dimesion);
+//			if (distance > parent->radius) {
+//				parent->radius = distance;
+//				parent = parent->parent;
+//			}
+//			else {
+//				break;
+//			}
+//		}
+//	}
+//
+//	// 如果不用分裂
+//	if (targetball->datanum < N0) {
+//		// 把新增加的point放入page里面
+//		Point p;
+//		p.id = ++num;
+//		p.data = new float[dimesion];
+//		memcpy(p.data, data, sizeof(float) * dimesion);
+//		for (int i = 0; i < BLOCKS_PER_PAGE; ++i) {
+//			if (page.blocks[i].bid == targetball->bid) {
+//				page.blocks[i].points[targetball->datanum] = p;
+//				break;
+//			}
+//		}
+//	} else {
+//		// 创建新的point数组来buildBall
+//		Point *points = new Point[N0 + 1];
+//
+//		// 将原来节点上的points放到新的point数组里面
+//		page.loadFromDisk(targetball->pid, index_path);
+//		loadBlock(targetball);
+//		for (int i = 0; i < targetball->datanum; ++i) {
+//			points[i].id = block.points[i].id;
+//			memcpy(points[i].data, block.points[i].data, sizeof(float) * dimesion);
+//		}
+//
+//		// 用要插入的data来创建新的point
+//		points[N0].id = ++num;
+//		points[N0].data = new float[dimesion];
+//		memcpy(points[N0].data, data, sizeof(float) * dimesion);
+//
+//		// 开始buildBall创建新的节点temp
+//		Ball *temp = NULL;
+//		buildBall(temp, N0 + 1, dimesion, points);
+//		temp->pid = temp->bid = -1;
+//		temp->datanum = -1;
+//		temp->leftball->pid = targetball->pid;
+//		temp->leftball->bid = targetball->bid;  // 分裂出来的左节点使用原理节点的block
+//		temp->rightball->bid = numOfBlocks++;  // 分裂出来的右节点要在所以blocks后面追加一个block（可能要开一张新的page）
+//		temp->rightball->pid = numOfBlocks / BLOCKS_PER_PAGE;
+//
+//		// 将新节点与父节点连接起来
+//		if (targetball->parent->leftball == targetball) {
+//			targetball->parent->leftball = temp;
+//		} else {
+//			targetball->parent->rightball = temp;
+//		}
+//
+//		// 获取分裂后左右两个节点的数据
+//		auto it = storage.rbegin();
+//		Point *leftpoints  = it->second;
+//		++it;
+//		Point *rightpoints = it->second;
+//
+//		// 把左节点的数据保存到page相应的block中
+//		int pos = -1;
+//		for (int i = 0; i < BLOCKS_PER_PAGE; ++i) {
+//			if (page.blocks[i].bid == temp->leftball->bid) {
+//				pos = i;
+//				break;
+//			}
+//		}
+//		for (int i = 0; i < temp->leftball->datanum; ++i) {
+//			page.blocks[pos].points[i].id = leftpoints[i].id;
+//			memcpy(page.blocks[pos].points[i].data, leftpoints[i].data, sizeof(float) * dimesion);
+//		}
+//
+//		// 如果需要新开一页
+//		if (numOfBlocks % BLOCKS_PER_PAGE == 0) {
+//			// 将右节点的数据放到page里面
+//			int pos = 0;
+//			for (int i = 0; i < temp->rightball->datanum; ++i) {
+//				page.blocks[pos].points[i].id = rightpoints[i].id;
+//				memcpy(page.blocks[pos].points[i].data, rightpoints[i].data, sizeof(float) * dimesion);
+//			}
+//			page.pid = numOfBlocks / BLOCKS_PER_PAGE;
+//		} else {
+//			// 加载最后一张page并且将右节点的数据放到里面
+//			page.loadFromDisk(numOfBlocks / BLOCKS_PER_PAGE, index_path);
+//			int pos = numOfBlocks % BLOCKS_PER_PAGE;
+//			for (int i = 0; i < temp->leftball->datanum; ++i) {
+//				page.blocks[pos].points[i].id = leftpoints[i].id;
+//				memcpy(page.blocks[pos].points[i].data, leftpoints[i].data, sizeof(float) * dimesion);
+//			}
+//		}
+//	}
+//
+//	return true;
+//}
 
-	// 找到要插入的节点在哪
-	int id = mipSearch(dimesion, data);
-	if (id == -1 || targetball == NULL) {
-		return false;
-	}
+//bool BallTree::deleteData(int d, float* data) {
+//	if (data == NULL) {
+//		return false;
+//	}
+//	if (d != dimesion) {
+//		return false;
+//	}
+//
+//	// 找到要删除的点的id
+//	int id = mipSearch(d, data);
+//	if (id == -1 || targetball == NULL) {
+//		return false;
+//	}
+//
+//	// 如果要删除数据所在的叶子只有它一个数据
+//	if (targetball->datanum == 1) {
+//		page.loadFromDisk(targetball->pid, index_path);
+//		if (targetball == root) {
+//			root->clear();
+//		} else if (targetball->parent == root) {
+//			if (root->leftball == targetball) {
+//				root = root->rightball;
+//			} else {
+//				root = root->leftball;
+//			}
+//		} else {
+//			Ball *parent, *grandparent;
+//			parent = targetball->parent;
+//			grandparent = parent->parent;
+//			if (grandparent->leftball == parent) {
+//				if (parent->leftball == targetball) {
+//					grandparent->leftball = parent->rightball;
+//				} else {
+//					grandparent->leftball = parent->leftball;
+//				}
+//			}
+//			else {
+//				if (parent->leftball == targetball) {
+//					grandparent->rightball = parent->rightball;
+//				} else {
+//					grandparent->rightball = parent->leftball;
+//				}
+//			}
+//		}
+//		targetball->clear();
+//	} else {
+//		targetball->datanum--;
+//		page.loadFromDisk(targetball->pid, index_path);
+//		int pos = -1;
+//		for (int i = 0; i < BLOCKS_PER_PAGE; ++i) {
+//			if (page.blocks[i].bid == targetball->bid) {
+//				pos = i;
+//				break;
+//			}
+//		}
+//		for (int i = 0; i < N0; ++i) {
+//			if (page.blocks[pos].points[i].id == id) {
+//				page.blocks[pos].points[i].id = page.blocks[pos].points[targetball->datanum - 1].id;
+//				memcpy(page.blocks[pos].points[i].data, page.blocks[pos].points[targetball->datanum - 1].data, sizeof(float) * dimesion);
+//				break;
+//			}
+//		}
+//	}
+//
+//	return true;
+//}
 
-	// 去看看是否需要修改父节点们的半径
-	float distance = getDistanse(data, targetball->center, dimesion);
-	if (distance > targetball->radius) {
-		targetball->radius = distance;
-		Ball *parent = targetball->parent;
-		while (parent != NULL) {
-			float distance = getDistanse(data, parent->center, dimesion);
-			if (distance > parent->radius) {
-				parent->radius = distance;
-				parent = parent->parent;
-			}
-			else {
-				break;
-			}
-		}
-	}
-
-	// 如果不用分裂
-	if (targetball->datanum < N0) {
-		// 把新增加的point放入page里面
-		Point p;
-		p.id = ++num;
-		p.data = new float[dimesion];
-		memcpy(p.data, data, sizeof(float) * dimesion);
-		for (int i = 0; i < BLOCKS_PER_PAGE; ++i) {
-			if (page.blocks[i].bid == targetball->bid) {
-				page.blocks[i].points[targetball->datanum] = p;
-				break;
-			}
-		}
-	} else {
-		// 创建新的point数组来buildBall
-		Point *points = new Point[N0 + 1];
-
-		// 将原来节点上的points放到新的point数组里面
-		page.loadFromDisk(targetball->pid, index_path);
-		loadBlock(targetball);
-		for (int i = 0; i < targetball->datanum; ++i) {
-			points[i].id = block.points[i].id;
-			memcpy(points[i].data, block.points[i].data, sizeof(float) * dimesion);
-		}
-
-		// 用要插入的data来创建新的point
-		points[N0].id = ++num;
-		points[N0].data = new float[dimesion];
-		memcpy(points[N0].data, data, sizeof(float) * dimesion);
-
-		// 开始buildBall创建新的节点temp
-		Ball *temp = NULL;
-		buildBall(temp, N0 + 1, dimesion, points);
-		temp->pid = temp->bid = -1;
-		temp->datanum = -1;
-		temp->leftball->pid = targetball->pid;
-		temp->leftball->bid = targetball->bid;  // 分裂出来的左节点使用原理节点的block
-		temp->rightball->bid = numOfBlocks++;  // 分裂出来的右节点要在所以blocks后面追加一个block（可能要开一张新的page）
-		temp->rightball->pid = numOfBlocks / BLOCKS_PER_PAGE;
-
-		// 将新节点与父节点连接起来
-		if (targetball->parent->leftball == targetball) {
-			targetball->parent->leftball = temp;
-		} else {
-			targetball->parent->rightball = temp;
-		}
-
-		// 获取分裂后左右两个节点的数据
-		auto it = storage.rbegin();
-		Point *leftpoints  = it->second;
-		++it;
-		Point *rightpoints = it->second;
-
-		// 把左节点的数据保存到page相应的block中
-		int pos = -1;
-		for (int i = 0; i < BLOCKS_PER_PAGE; ++i) {
-			if (page.blocks[i].bid == temp->leftball->bid) {
-				pos = i;
-				break;
-			}
-		}
-		for (int i = 0; i < temp->leftball->datanum; ++i) {
-			page.blocks[pos].points[i].id = leftpoints[i].id;
-			memcpy(page.blocks[pos].points[i].data, leftpoints[i].data, sizeof(float) * dimesion);
-		}
-
-		// 如果需要新开一页
-		if (numOfBlocks % BLOCKS_PER_PAGE == 0) {
-			// 将右节点的数据放到page里面
-			int pos = 0;
-			for (int i = 0; i < temp->rightball->datanum; ++i) {
-				page.blocks[pos].points[i].id = rightpoints[i].id;
-				memcpy(page.blocks[pos].points[i].data, rightpoints[i].data, sizeof(float) * dimesion);
-			}
-			page.pid = numOfBlocks / BLOCKS_PER_PAGE;
-		} else {
-			// 加载最后一张page并且将右节点的数据放到里面
-			page.loadFromDisk(numOfBlocks / BLOCKS_PER_PAGE, index_path);
-			int pos = numOfBlocks % BLOCKS_PER_PAGE;
-			for (int i = 0; i < temp->leftball->datanum; ++i) {
-				page.blocks[pos].points[i].id = leftpoints[i].id;
-				memcpy(page.blocks[pos].points[i].data, leftpoints[i].data, sizeof(float) * dimesion);
-			}
-		}
-	}
-
-	return true;
-}
-
-bool BallTree::deleteData(int d, float* data) {
-	if (data == NULL) {
-		return false;
-	}
-	if (d != dimesion) {
-		return false;
-	}
-
-	// 找到要删除的点的id
-	int id = mipSearch(d, data);
-	if (id == -1 || targetball == NULL) {
-		return false;
-	}
-
-	// 如果要删除数据所在的叶子只有它一个数据
-	if (targetball->datanum == 1) {
-		page.loadFromDisk(targetball->pid, index_path);
-		if (targetball == root) {
-			root->clear();
-		} else if (targetball->parent == root) {
-			if (root->leftball == targetball) {
-				root = root->rightball;
-			} else {
-				root = root->leftball;
-			}
-		} else {
-			Ball *parent, *grandparent;
-			parent = targetball->parent;
-			grandparent = parent->parent;
-			if (grandparent->leftball == parent) {
-				if (parent->leftball == targetball) {
-					grandparent->leftball = parent->rightball;
-				} else {
-					grandparent->leftball = parent->leftball;
-				}
-			}
-			else {
-				if (parent->leftball == targetball) {
-					grandparent->rightball = parent->rightball;
-				} else {
-					grandparent->rightball = parent->leftball;
-				}
-			}
-		}
-		targetball->clear();
-	} else {
-		targetball->datanum--;
-		page.loadFromDisk(targetball->pid, index_path);
-		int pos = -1;
-		for (int i = 0; i < BLOCKS_PER_PAGE; ++i) {
-			if (page.blocks[i].bid == targetball->bid) {
-				pos = i;
-				break;
-			}
-		}
-		for (int i = 0; i < N0; ++i) {
-			if (page.blocks[pos].points[i].id == id) {
-				page.blocks[pos].points[i].id = page.blocks[pos].points[targetball->datanum - 1].id;
-				memcpy(page.blocks[pos].points[i].data, page.blocks[pos].points[targetball->datanum - 1].data, sizeof(float) * dimesion);
-				break;
-			}
-		}
-	}
-
-	return true;
-}
-
-void BallTree::loadBlock(Ball *ball) {
-	if (ball == NULL) {
-		return;
-	}
-	if (ball->pid == -1 || ball->offset == -1) {
+void BallTree::loadBlock(const int pid, const int offset) {
+	if (pid == -1 || offset == -1) {
 		return;
 	}
 
 	// 如果目标页不在内存中
-	if (pages.find(ball->pid) == pages.end()) {
+	if (pages.find(pid) == pages.end()) {
 		// 如果内存中的页数超出限制
 		if (pages.size() == PAGES_LIMIT) {
 			pages.begin()->second.clear();
 			pages.erase(pages.begin());  // 删去第一页
 		}
 		Page temp;
-		temp.loadFromDisk(ball->pid, index_path);
-		pages[ball->pid] = temp;
+		temp.loadFromDisk(pid, index_path);
+		pages[pid] = temp;
 	}
 }
 

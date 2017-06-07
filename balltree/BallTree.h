@@ -63,8 +63,9 @@ public:
 
 	// 根据bid加载相应的数据到私有成员block中
 	// @author painterdrown
-	void loadBlock(Ball *ball);
+	void loadBlock(const int pid, const int offset);
 
+	// @author painterdrown
 	void setPagesLimit(const int limit);
 };
 
