@@ -235,18 +235,14 @@ void quadSplit(int n, int de, float* &a, float* &b, float* &c, float* &d, float*
 	a = findFurestPoint(data, randomPoint, n, de);
 	b = findFurestPoint(data, a, n, de);
 
-	set<float*> table;
-	findFurestPoints(data,n, de, table);
-	set<float*>::iterator iter;
-	float min = 1000;
-	for (iter = table.begin(); iter != table.end(); iter++) {
-		float cur = getDistanse(*iter, a, de) - getDistanse(*iter, b, de);
-		if (cur < min) {
-			min = cur;
-			c = *iter;
+	float max = 0;
+	for (int i = 0; i < n; i++) {
+		float cur = getDistanse(a, data[i], de) + getDistanse(b, data[i], de);
+		if (max < cur) {
+			max = cur;
+			c = data[i];
 		}
 	}
-
 	d = findFurestPoint(data, c, n, de);
 }
 

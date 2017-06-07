@@ -156,9 +156,9 @@ void BallTree::buildQuadBall(Quadball* &node, int n, int d, float **data) {
 		data3 = vectorToFloat(d3);
 		data4 = vectorToFloat(d4);
 		buildQuadBall(node->ball1, d1.size(), d, data1);
-		buildQuadBall(node->ball2, d2.size(), d, data1);
-		buildQuadBall(node->ball3, d3.size(), d, data1);
-		buildQuadBall(node->ball4, d4.size(), d, data1);
+		buildQuadBall(node->ball2, d2.size(), d, data2);
+		buildQuadBall(node->ball3, d3.size(), d, data3);
+		buildQuadBall(node->ball4, d4.size(), d, data4);
 	}
 }
 
