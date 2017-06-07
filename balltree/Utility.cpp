@@ -8,8 +8,7 @@ int BLOCKS_PER_PAGE;
 // =========== Block Struct ===========
 
 Block::Block() {
-	bid = pid = -1;
-	points = NULL;
+	points = new Point[N0];
 }
 
 Block::~Block() {
@@ -17,25 +16,15 @@ Block::~Block() {
 }
 
 void Block::clear() {
-	bid = pid = -1;
 	if (points != NULL) {
 		delete[] points;
-	}
-}
-
-void Block::init() {
-	points = new Point[N0];
-	for (int i = 0; i < N0; ++i) {
-		points[i].data = new float[DIMENSION] {0.0f};
 	}
 }
 
 // =========== Page Struct ===========
 
 Page::Page() {
-	pid = -1;
-	blocks = NULL;
-	init();
+	blocks = new Block[BLOCKS_PER_PAGE];
 }
 
 Page::~Page() {
@@ -43,48 +32,36 @@ Page::~Page() {
 }
 
 void Page::clear() {
-	pid = -1;
 	if (blocks != NULL) {
 		delete[] blocks;
 	}
 }
 
-void Page::init() {
-	blocks = new Block[BLOCKS_PER_PAGE];
-	for (int i = 0; i < BLOCKS_PER_PAGE; ++i) {
-		blocks[i].points = new Point[N0];
-		for (int j = 0; j < N0; ++j) {
-			blocks[i].points[j].data = new float[DIMENSION] {0.0f};
-		}
+void Page::saveToDisk(const int pid, const string index_path) {
+	if (pid == -1) {
+		return;
 	}
-}
 
-void Page::saveToDisk() {
 	stringstream stream;
 	stream << pid;
 	string temp;
 	stream >> temp;
-	string fileName = "page" + temp + ".bin";
+	string fileName = index_path + "/page" + temp + ".bin";
 	ofstream dataFile;
 	dataFile.open(fileName, ios_base::out | ios_base::binary);
 	if (!dataFile.is_open()) {
 		exit(EXIT_FAILURE);
 	}
 	for (int i = 0; i < BLOCKS_PER_PAGE; ++i) {
-		dataFile.write((char*)&blocks[i].bid, sizeof(int));
 		for (int j = 0; j < N0; ++j) {
-			dataFile.write((char*)blocks[i].points[j].data, sizeof(int) * DIMENSION);
+			dataFile.write((char*)&(blocks[i].points[j].id), sizeof(int));
+			dataFile.write((char*)blocks[i].points[j].data, sizeof(float) * DIMENSION);
 		}
 	}
 }
 
 void Page::loadFromDisk(const int pid, const string index_path) {
 	if (pid == -1) {
-		return;
-	}
-
-	// 早已经加载好了的，直接返回
-	if (pid == this->pid) {
 		return;
 	}
 
@@ -97,14 +74,11 @@ void Page::loadFromDisk(const int pid, const string index_path) {
 		return;
 	}
 	for (int i = 0; i < BLOCKS_PER_PAGE; ++i) {
-		blocks[i].pid = pid;
-		fread(&blocks[i].bid, sizeof(int), 1, fp);
 		for (int j = 0; j < N0; ++j) {
 			fread(&blocks[i].points[j].id, sizeof(int), 1, fp);
 			fread(blocks[i].points[j].data, sizeof(float), DIMENSION, fp);
 		}
 	}
-	this->pid = pid;
 }
 
 // ===================================

@@ -15,11 +15,10 @@ private:
 	int num;  // 记录的总数量
 	int numOfBlocks;  // 用于生成新的Block
 	int targetid;
-	int pid;
+	static int PAGES_LIMIT;  // 最多只能加载多少页到内存中
 	Ball *root;
 	Ball *targetball;
-	Quadball *Quadroot;
-	Block block;
+	Quadball *quadroot;
 	string index_path;
 	map<int, Page> pages;
 public:
@@ -65,6 +64,8 @@ public:
 	// 根据bid加载相应的数据到私有成员block中
 	// @author painterdrown
 	void loadBlock(Ball *ball);
+
+	void setPagesLimit(const int limit);
 };
 
 #endif

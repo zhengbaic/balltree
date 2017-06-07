@@ -22,8 +22,8 @@ struct Ball {
 	Ball* parent;
 	Ball* leftball;
 	Ball* rightball;
-	int bid;
-	int pid;
+	int pid;  // 对应的数据块在哪一页
+	int offset;  // 对应的数据库在页中的第几块
 	int datanum;
 	float* center;
 	float radius;
@@ -33,7 +33,7 @@ struct Ball {
 		center = NULL;
 		datanum = -1;
 		radius = 0;
-		pid = bid = -1;
+		pid = offset = -1;
 	}
 
 	~Ball() {
@@ -46,7 +46,7 @@ struct Ball {
 
 		ball->datanum = -1;
 		ball->radius = 0;
-		ball->pid = ball->bid = -1;
+		ball->pid = ball->offset = -1;
 		if (ball->center != NULL) {
 			delete[] ball->center;
 		}
@@ -114,6 +114,7 @@ struct Point {
 	Point() {
 		id = -1;
 		data = NULL;
+		data = new float[DIMENSION];
 	}
 
 	~Point() {
@@ -130,26 +131,21 @@ struct Point {
 
 struct Block {
 	// 成员变量
-	int pid;  // 在哪一页
-	int offset;  // 在页的第几块
 	Point *points;
 	// 成员函数
 	Block();
 	~Block();
 	void clear();
-	void init();
 };
 
 struct Page {
 	// 成员变量
-	int pid;
 	Block *blocks;
 	// 成员函数
 	Page();
 	~Page();
 	void clear();
-	void init();  // 为一整张页开好空间
-	void saveToDisk();
+	void saveToDisk(const int pid, const string index_path);
 	void loadFromDisk(const int pid, const string index_path);
 };
 

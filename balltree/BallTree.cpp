@@ -10,30 +10,20 @@ map<int, Point*> storage;
 // 测试
 int countTimes = 0;
 
+int BallTree::PAGES_LIMIT = 500;
+
 BallTree::BallTree() {
 	dimesion = 0;
 	num = 0;
 	targetid = -1;
 	root = NULL;
 	targetball = NULL;
-	Quadroot = NULL;
+	quadroot = NULL;
 	numOfBlocks = 0;
-	//initPage = false;
 }
 
 BallTree::~BallTree() {
-	// 将更新的页面保存到硬盘
-	if (page.pid != -1) {
-		page.saveToDisk();
-	}
-
-	// delete掉，免得内存泄漏
-	for (auto i : storage) {
-		if (i.second != NULL) {
-			delete i.second->data;
-		}
-	}
-	storage.clear();
+	// 将pages保存到硬盘
 }
 
 bool BallTree::buildTree(int n, int d, float **data) {
@@ -178,6 +168,14 @@ bool BallTree::storeTree(const char* index_path) {
 	printf("Storing tree ...\n");
 	openF(root, storage, index_path, dimesion);
 	printf("Storing tree completed!\n");
+
+	// delete掉，免得内存泄漏
+	for (auto i : storage) {
+		if (i.second != NULL) {
+			delete i.second->data;
+		}
+	}
+	storage.clear();
 	return true;
 }
 
@@ -434,26 +432,25 @@ void BallTree::loadBlock(Ball *ball) {
 	if (ball == NULL) {
 		return;
 	}
-	if (ball->pid == -1 || ball->bid == -1) {
+	if (ball->pid == -1 || ball->offset == -1) {
 		return;
 	}
 
 	// 如果目标页不在内存中
 	if (pages.find(ball->pid) == pages.end()) {
-		page.loadFromDisk(ball->pid, index_path);
-		pages[ball->pid] = page;
-	} else {
-		page = pages[ball->pid];
-		page.pid = 
-	}
-
-	for (int i = 0; i < BLOCKS_PER_PAGE; ++i) {
-		if (page.blocks[i].bid == ball->bid) {
-			for (int j = 0; j < N0; ++j) {
-				block.points[j].id = page.blocks[i].points[j].id;
-				memcpy(block.points[j].data, page.blocks[i].points[j].data, sizeof(float) * DIMENSION);
-			}
-			break;
+		// 如果内存中的页数超出限制
+		if (pages.size() == PAGES_LIMIT) {
+			pages.begin()->second.clear();
+			pages.erase(pages.begin());  // 删去第一页
 		}
+		Page temp;
+		temp.loadFromDisk(ball->pid, index_path);
+		pages[ball->pid] = temp;
+	}
+}
+
+void BallTree::setPagesLimit(const int limit) {
+	if (limit > 0) {
+		PAGES_LIMIT = limit;
 	}
 }
