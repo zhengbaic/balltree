@@ -1,6 +1,11 @@
 #include "Utility.h"
 
-using namespace std;
+void initConstants(const int d) {
+	DIMENSION = d;
+	SIZE_OF_POINT = 4 + 4 * DIMENSION;
+	BYTES_PER_BLOCK = N0 * SIZE_OF_POINT;
+	BLOCKS_PER_PAGE = BYTES_PER_PAGE / BYTES_PER_BLOCK;
+}
 
 bool read_data(int n, int d, float** &data, const char* file_name) {
 	FILE* fin = fopen(file_name, "r");
@@ -33,7 +38,7 @@ float getDistanse(float* a, float *b, int d) {
 	return r;
 }
 
-void Analyse(ball *node, int n, int d, float **data) {
+void analyse(Ball *node, int n, int d, float **data) {
 	float* mean = new float[d] {.0f};
 	for (int i = 0; i < n; i++) {
 		for (int j = 0; j < d; j++) {
@@ -44,7 +49,7 @@ void Analyse(ball *node, int n, int d, float **data) {
 		mean[i] /= n;
 	}
 
-	node->CircleCenter = mean;
+	node->center = mean;
 
 	float r = 0;
 	for (int i = 0; i < n; i++) {
@@ -54,7 +59,7 @@ void Analyse(ball *node, int n, int d, float **data) {
 	node->radius = sqrt(r);
 }
 
-void QuadAnalyse(Quadball *node, int n, int d, float **data) {
+void quadAnalyse(Quadball *node, int n, int d, float **data) {
 	float* mean = new float[d] {.0f};
 	for (int i = 0; i < n; i++) {
 		for (int j = 0; j < d; j++) {
@@ -65,7 +70,7 @@ void QuadAnalyse(Quadball *node, int n, int d, float **data) {
 		mean[i] /= n;
 	}
 
-	node->CircleCenter = mean;
+	node->center = mean;
 
 	float r = 0;
 	for (int i = 0; i < n; i++) {
@@ -75,7 +80,7 @@ void QuadAnalyse(Quadball *node, int n, int d, float **data) {
 	node->radius = sqrt(r);
 }
 
-float* FindFurestPoint(float** data, float * po, int n, int d) {
+float* findFurestPoint(float** data, float * po, int n, int d) {
 	float* res = new float[d] {.0f};
 	float max = 0;
 	for (int i = 0; i < n; i++) {
@@ -88,32 +93,32 @@ float* FindFurestPoint(float** data, float * po, int n, int d) {
 	return res;
 }
 
-void FindFurestPoints(float** data, int n, int d, set<float*> s) {
+void findFurestPoints(float** data, int n, int d, set<float*> s) {
 	for (int i = 0; i < n; i++) {
-		s.insert(FindFurestPoint(data, data[i], n, d));
+		s.insert(findFurestPoint(data, data[i], n, d));
 	}
 }
 
-void Split(int n , int d, float* &a, float* &b, float** data) {
+void split(int n , int d, float* &a, float* &b, float** data) {
 	float* randomPoint = data[0];
 	a = new float[d] {.0f};
 	b = new float[d] {.0f};
-	a = FindFurestPoint(data, randomPoint, n, d);
-	b = FindFurestPoint(data, a, n, d);
+	a = findFurestPoint(data, randomPoint, n, d);
+	b = findFurestPoint(data, a, n, d);
 }
 
-void QuadSplit(int n, int de, float* &a, float* &b, float* &c, float* &d, float** data, float* & mean) {
+void quadSplit(int n, int de, float* &a, float* &b, float* &c, float* &d, float** data, float* & mean) {
 	float* randomPoint = data[0];
 	a = new float[de] {.0f};
 	b = new float[de] {.0f};
 	c = new float[de] {.0f};
 	d = new float[de] {.0f};
 
-	a = FindFurestPoint(data, randomPoint, n, de);
-	b = FindFurestPoint(data, a, n, de);
+	a = findFurestPoint(data, randomPoint, n, de);
+	b = findFurestPoint(data, a, n, de);
 
 	set<float*> table;
-	FindFurestPoints(data,n, de, table);
+	findFurestPoints(data,n, de, table);
 	set<float*>::iterator iter;
 	float min = 1000;
 	for (iter = table.begin(); iter != table.end(); iter++) {
@@ -124,12 +129,12 @@ void QuadSplit(int n, int de, float* &a, float* &b, float* &c, float* &d, float*
 		}
 	}
 
-	d = FindFurestPoint(data, c, n, de);
+	d = findFurestPoint(data, c, n, de);
 }
 
-point* VectorToPoint(vector<point> v) {
+Point* vectorToPoint(vector<Point> v) {
 	int size = v.size();
-	point *res = new point[size];
+	Point *res = new Point[size];
 	for (int i = 0; i < size; i++) {
 		res[i].data = v[i].data;
 		res[i].id = v[i].id;
@@ -137,7 +142,7 @@ point* VectorToPoint(vector<point> v) {
 	return res;
 }
 
-float** VectorToFloat(vector<float*> v) {
+float** vectorToFloat(vector<float*> v) {
 	int size = v.size();
 	float **res = new float*[size];
 	for (int i = 0; i < size; i++) {
@@ -146,7 +151,7 @@ float** VectorToFloat(vector<float*> v) {
 	return res;
 }
 
-void openF(ball* root, map<int, point*> storage, const char* index_path) {
+void openF(Ball* root, map<int, Point*> storage, const char* index_path) {
 	int testCount = 0;
 
 	// 索引树文件
@@ -157,7 +162,7 @@ void openF(ball* root, map<int, point*> storage, const char* index_path) {
 	
 	// 数据文件
 	ofstream dataFile;
-	map<int, point*>::iterator mapIter;
+	map<int, Point*>::iterator mapIter;
 	int pageId = 0;							// 页号
 	int count = 0;							// 每页的数量
 	stringstream stream;
@@ -181,13 +186,13 @@ void openF(ball* root, map<int, point*> storage, const char* index_path) {
 		exit(EXIT_FAILURE);
 	}
 
-	stack<ball*> Stack;
+	stack<Ball*> Stack;
 	while (root || !Stack.empty()) {
 
 		while (root) {
 			Stack.push(root);
 			outFile.write((char*)&root->bid, sizeof 4);
-			outFile.write((char*)root->CircleCenter, sizeof 4.0f * 50);
+			outFile.write((char*)root->center, sizeof 4.0f * 50);
 			outFile.write((char*)&root->radius, sizeof 4.0f);
 			outFile.write((char*)&root->datanum, sizeof 4);
 			outFile.write((char*)&root->leftball, sizeof 4);
@@ -252,7 +257,7 @@ void openF(ball* root, map<int, point*> storage, const char* index_path) {
 	dataFile.close();
 }
 
-int readF(ball* &root, const char* index_path) {
+int readF(Ball* &root, const char* index_path) {
 	ifstream inFile;
 	int numOfBlock = 0;
 	string tempFileName = index_path;
@@ -262,18 +267,18 @@ int readF(ball* &root, const char* index_path) {
 		exit(EXIT_FAILURE);
 	}
 	//inFile.read((char*)&root, sizeof root + 1);
-	root = new ball;
-	root->CircleCenter = new float[50];
+	root = new Ball;
+	root->center = new float[50];
 	inFile.read((char*)&root->bid, sizeof 4);
-	inFile.read((char*)root->CircleCenter, sizeof 4.0f * 50);
+	inFile.read((char*)root->center, sizeof 4.0f * 50);
 	inFile.read((char*)&root->radius, sizeof 4.0f);
 	inFile.read((char*)&root->datanum, sizeof 4);
 	inFile.read((char*)&root->leftball, sizeof 4);
 	inFile.read((char*)&root->rightball, sizeof 4);
 	inFile.read((char*)&root->parent, sizeof 4);
 
-	ball *head = root;
-	stack<ball*> Stack;
+	Ball *head = root;
+	stack<Ball*> Stack;
 	bool flag = false;
 	while (root || !Stack.empty()) {
 
@@ -283,7 +288,7 @@ int readF(ball* &root, const char* index_path) {
 			numOfBlock++;
 			if (flag) {
 				inFile.read((char*)&root->bid, sizeof 4);
-				inFile.read((char*)root->CircleCenter, sizeof 4.0f * 50);
+				inFile.read((char*)root->center, sizeof 4.0f * 50);
 				inFile.read((char*)&root->radius, sizeof 4.0f);
 				inFile.read((char*)&root->datanum, sizeof 4);
 				inFile.read((char*)&root->leftball, sizeof 4);
@@ -335,15 +340,24 @@ int readF(ball* &root, const char* index_path) {
 	return numOfBlock;
 }
 
-void output(ball* root) {
-	stack<ball*> Stack;
+float getMax(int d, float* query, Ball* Root) {
+	float Max = 0;
+	for (int i = 0; i < d; i++) {
+		Max += Root->center[i] * query[i];
+	}
+	Max += Root->radius * getLength(d, query);
+	return Max;
+}
+
+void output(Ball* root) {
+	stack<Ball*> Stack;
 	while (root || !Stack.empty()) {
 		while (root) {
 			Stack.push(root);
 			cout << root->bid << " ";
 			cout << "圆心： [";
 			for (int i = 0; i < 50; i++) {
-				printf("%f ,", root->CircleCenter[i]);
+				printf("%f ,", root->center[i]);
 			}
 			cout << "]" << endl;
 			cout << " " << root->radius << endl;
@@ -371,15 +385,6 @@ void displayCenter(float* f, int d) {
 	cout << "]" << endl;
 }
 
-float getMax(int d, float* query, ball* Root) {
-	float Max = 0;
-	for (int i = 0; i < d; i++) {
-		Max += Root->CircleCenter[i] * query[i];
-	}
-	Max += Root->radius * getLength(d, query);
-	return Max;
-}
-
 float getLength(int d, float* query) {
 	float Length = 0;
 	for (int i = 0; i < d; i++) {
@@ -395,25 +400,4 @@ float getInnerproduct(int d, float * query, float * vec) {
 		Innerproduct += query[i] * vec[i];
 	}
 	return Innerproduct;
-}
-
-bool traverseAndReplace(ball *root, ball *oldBall, ball *newBall) {
-	if (root == NULL || oldBall == NULL) {
-		return false;
-	}
-
-	if (root->leftball == oldBall) {
-		delete root->leftball;
-		root->leftball = newBall;
-		return true;
-	}
-	if (root->rightball == oldBall) {
-		delete root->rightball;
-		root->rightball = newBall;
-		return true;
-	}
-	if (!traverseAndReplace(root->leftball, oldBall, newBall)) {
-		return traverseAndReplace(root->rightball, oldBall, newBall);
-	}
-	return true;
 }

@@ -1,48 +1,42 @@
-#include "BallTree.h"
+ï»¿#include "BallTree.h"
 
-// È«¾Ö±äÁ¿
-map<int, point*> storage;
+// å…¨å±€å˜é‡
+map<int, Point*> storage;
 
 BallTree::BallTree() {
 	dimesion = 0;
 	num = 0;
-	pid = -1;
+	targetid = -1;
 	root = NULL;
-	target = NULL;
+	targetball = NULL;
 	Quadroot = NULL;
 	numOfBlocks = 0;
-	target_bid = -1;
-	initPage = false;
+	//initPage = false;
 }
 
 BallTree::~BallTree() {
-	// ½«¸üĞÂµÄÒ³Ãæ±£´æµ½Ó²ÅÌ
-	if (pid != -1) {
-		savePage(pid);
+	// å°†æ›´æ–°çš„é¡µé¢ä¿å­˜åˆ°ç¡¬ç›˜
+	if (page.pid != -1) {
+		page.saveToDisk();
 	}
 
-	// deleteµô£¬ÃâµÃÄÚ´æĞ¹Â©
+	// deleteæ‰ï¼Œå…å¾—å†…å­˜æ³„æ¼
 	for (auto i : storage) {
-		delete i.second->data;
+		if (i.second != NULL) {
+			delete i.second->data;
+		}
 	}
 	storage.clear();
 }
 
-int BallTree::getNumOfBlock() {
-	return numOfBlocks;
-}
-
-void BallTree::setNumOfBlock(int num) {
-	numOfBlocks = num;
-}
-
 bool BallTree::buildTree(int n, int d, float **data) {
 	static int id = 1;
-
+	initConstants(d);  // åˆå§‹åŒ–Utilityä¸­çš„å¸¸é‡
 	dimesion = d;
 	num = n;
+
 	printf("Building tree ...\n");
-	point* points = new point[n];
+	Point* points = new Point[n];
 	for (int i = 0; i < n; i++) {
 		points[i].data = new float[d];
 		points[i].id = id++;
@@ -50,17 +44,16 @@ bool BallTree::buildTree(int n, int d, float **data) {
 			points[i].data[j] = data[i][j];
 		}
 	}
-	root = new ball();
+	root = new Ball();
 	buildBall(root, n, d, points);
 	printf("Building tree completed!\n");
 	
-	// displayTree();
 	return true;
 }
 
-void BallTree::buildBall(ball* &node, int n, int d, point *points) {
+void BallTree::buildBall(Ball* &node, int n, int d, Point *points) {
 	static int bid = 0;
-	static vector<ball*> balls;
+	static vector<Ball*> balls;
 
 	float** data = new float*[n];
 	for (int i = 0; i < n; i++) {
@@ -69,10 +62,10 @@ void BallTree::buildBall(ball* &node, int n, int d, point *points) {
 			data[i][j] = points[i].data[j];
 		}
 	}
-	Analyse(node, n, d, data);  // µÃµ½Ô²ĞÄ¸ú°ë¾¶£¨Utility.cpp£©
+	analyse(node, n, d, data);  // å¾—åˆ°åœ†å¿ƒè·ŸåŠå¾„ï¼ˆUtility.cppï¼‰
 	if (n <= N0) {
-		// Ò¶×Ó
-		storage.insert(map<int, point*>::value_type(bid, points));
+		// å¶å­
+		storage.insert(map<int, Point*>::value_type(bid, points));
 		node->bid = bid;
 		balls.push_back(node);
 		node->datanum = n;
@@ -81,11 +74,11 @@ void BallTree::buildBall(ball* &node, int n, int d, point *points) {
 	else {
 		float* A = NULL;
 		float* B = NULL;
-		Split(n, d, A, B, data);
-		point* leftdata;//A
-		point* rightdata;//B
-		vector<point> leftp;
-		vector<point> rightp;
+		split(n, d, A, B, data);
+		Point* leftdata;//A
+		Point* rightdata;//B
+		vector<Point> leftp;
+		vector<Point> rightp;
 		for (int i = 0; i < n; i++) {
 			if (getDistanse(A, points[i].data, d) < getDistanse(B, points[i].data, d)) {//A
 				leftp.push_back(points[i]);
@@ -94,29 +87,15 @@ void BallTree::buildBall(ball* &node, int n, int d, point *points) {
 				rightp.push_back(points[i]);
 			}
 		}
-		leftdata = VectorToPoint(leftp);
-		rightdata = VectorToPoint(rightp);
-		node->leftball = new ball();
-		node->rightball = new ball();
+		leftdata = vectorToPoint(leftp);
+		rightdata = vectorToPoint(rightp);
+		node->leftball = new Ball();
+		node->rightball = new Ball();
 		node->leftball->parent = node;
 		node->rightball->parent = node;
 		buildBall(node->leftball, leftp.size(), d, leftdata);
 		buildBall(node->rightball, rightp.size(), d, rightdata);
 	}
-}
-
-bool BallTree::storeTree(const char* index_path) {
-	printf("Storing tree ...\n");
-	openF(root, storage, index_path);
-	printf("Storing tree completed!\n");
-	return true;
-}
-
-bool BallTree::restoreTree(const char* index_path) {
-	printf("Restoring tree ...\n");
-	numOfBlocks = readF(root, index_path);
-	printf("Restoring tree completed!\n");
-	return true;
 }
 
 bool BallTree::buildQuadTree(int n, int d, float ** data)
@@ -126,22 +105,21 @@ bool BallTree::buildQuadTree(int n, int d, float ** data)
 	printf("Building QuadTree ...\n");
 	buildQuadBall(Quadroot, n, d, data);
 	printf("Building QuadTree completed!\n");
-	//displayTree();
 	return true;
 }
 
 void BallTree::buildQuadBall(Quadball* &node, int n, int d, float **data) {
 	node = new Quadball();
-	QuadAnalyse(node, n, d, data);
+	quadAnalyse(node, n, d, data);
 	if (n <= N0) {
-		//Ò¶×Ó
+		//å¶å­
 	}
 	else {
 		float* A = NULL;
 		float* B = NULL;
 		float* C = NULL;
 		float* D = NULL;
-		QuadSplit(n, d, A, B, C, D, data, node->CircleCenter);
+		quadSplit(n, d, A, B, C, D, data, node->center);
 		float ** data1;//A
 		float ** data2;//B
 		float ** data3;//C
@@ -168,15 +146,29 @@ void BallTree::buildQuadBall(Quadball* &node, int n, int d, float **data) {
 				d4.push_back(data[i]);
 			}
 		}
-		data1 = VectorToFloat(d1);
-		data2 = VectorToFloat(d2);
-		data3 = VectorToFloat(d3);
-		data4 = VectorToFloat(d4);
+		data1 = vectorToFloat(d1);
+		data2 = vectorToFloat(d2);
+		data3 = vectorToFloat(d3);
+		data4 = vectorToFloat(d4);
 		buildQuadBall(node->ball1, d1.size(), d, data1);
 		buildQuadBall(node->ball2, d2.size(), d, data1);
 		buildQuadBall(node->ball3, d3.size(), d, data1);
 		buildQuadBall(node->ball4, d4.size(), d, data1);
 	}
+}
+
+bool BallTree::storeTree(const char* index_path) {
+	printf("Storing tree ...\n");
+	openF(root, storage, index_path);
+	printf("Storing tree completed!\n");
+	return true;
+}
+
+bool BallTree::restoreTree(const char* index_path) {
+	printf("Restoring tree ...\n");
+	numOfBlocks = readF(root, index_path);
+	printf("Restoring tree completed!\n");
+	return true;
 }
 
 int BallTree::mipSearch(int d,float* query) {
@@ -189,30 +181,32 @@ int BallTree::mipSearch(int d,float* query) {
 	if (Max < getMax(d,query, root->rightball)) {
 		eval(d, query, Max, root->rightball);
 	}
-	return -1;  // ÕâÀïĞèÒª¸Ä£¡
+	return -1;  // è¿™é‡Œéœ€è¦æ”¹ï¼
 }
 
-float BallTree::eval(int d, float* query, float Max, ball* Root) {
+float BallTree::eval(int d, float* query, float Max, Ball* Root) {
 	float temp = 0.0f;
 	if (Root->leftball == NULL && Root->rightball == NULL) {
-		for (int i = 0; i <= sizeof(storage[Root->bid]) / sizeof(float) / d; i++) {
-			//temp = getInnerproduct(d, query, storage[Root->bid][i]);
+		for (int i = 0; i <= Root->datanum; i++) {
+			loadBlock(Root);
+			temp = getInnerproduct(d, query, block.points[i].data);
 			if (Max < temp) {
 				Max = temp;
-				target = Root;
+				targetball = Root;
+				targetid = block.points[i].id;
 			}
 		}
 		return Max;
 	}
-	Max = eval(d,query,Max, Root->leftball);
+	Max = eval(d, query, Max, Root->leftball);
 	if (Max < getMax(d, query, Root->rightball)) {
-		Max = eval(d,query,Max, Root->rightball);
+		Max = eval(d, query, Max, Root->rightball);
 	}
 	return Max;
 }
 
 void BallTree::displayTree() {
-	queue<ball*> tree;
+	queue<Ball*> tree;
 	int count = 0;
 	int leaf = 0;
 	printf("=========== DISPLAY THE INDEX TREE ===========\n");
@@ -230,140 +224,116 @@ void BallTree::displayTree() {
 	printf("TOTAL LEAF NODES: %d\n", leaf);
 }
 
-void BallTree::loadPage(const int pid) {
-	if (pid < 0) {
-		return;
-	}
-	if (pid == this->pid) {
-		return;
-	}
-
-	// ÏÈ±£´æµ±Ç°ÔÚÄÚ´æÖĞµÄÒ³
-	if (this->pid != -1) {
-		savePage(pid);
-	}
-
-	// ÎªpageÉêÇëºÃËùÓĞµÄ¿Õ¼ä
-	if (!initPage) {
-		for (int i = 0; i < POINTS_PER_PAGE; ++i) {
-			page[i].data = new float[dimesion]{0.0f};
-		}
-	}
-
-	// ´ÓÓ²ÅÌÖĞ¶ÁÈ¡ĞÂµÄÒ³
-	FILE *fp;
-	char filename[L];
-	sprintf(filename, "page%d.bin", pid);
-	fp = fopen(filename, "rb");
-	if (fp == NULL) {
-		return;
-	}
-	for (int i = 0; i < POINTS_PER_PAGE; ++i) {
-		fread(&page[i].id, sizeof(int), 1, fp);
-		fread(page[i].data, sizeof(float), dimesion, fp);
-	}
-}
-
-void BallTree::loadBlock(const int bid) {
-	// ´ÓÓ²ÅÌÖĞ¼ÓÔØpage
-	loadPage(pid);
-
-	// ´ÓpageÖĞ¶ÁÈ¡block
-	int pos = getBlockPosInPage(bid);
-	memcpy(block, page + pos, BYTES_PER_BLOCK(dimesion));
-}
-
 bool BallTree::insertData(int d, float* data) {
 	if (data == NULL) {
 		return false;
 	}
 
+	// æ‰¾åˆ°è¦æ’å…¥çš„èŠ‚ç‚¹åœ¨å“ª
 	int id = mipSearch(dimesion, data);
-	if (id == -1 || target == NULL) {
+	if (id == -1 || targetball == NULL) {
 		return false;
 	}
 
-	// Èç¹û²»ÓÃ·ÖÁÑ
-	if (target->datanum < N0) {
-		float distance = getDistanse(data, target->CircleCenter, dimesion);
-		if (distance > target->radius) {
-			target->radius = distance;
-			ball *parent = target->parent;
-			while (parent != NULL) {
-				float distance = getDistanse(data, parent->CircleCenter, dimesion);
-				if (distance > parent->radius) {
-					parent->radius = distance;
-					parent = parent->parent;
-				} else {
-					break;
-				}
+	// å»çœ‹çœ‹æ˜¯å¦éœ€è¦ä¿®æ”¹çˆ¶èŠ‚ç‚¹ä»¬çš„åŠå¾„
+	float distance = getDistanse(data, targetball->center, dimesion);
+	if (distance > targetball->radius) {
+		targetball->radius = distance;
+		Ball *parent = targetball->parent;
+		while (parent != NULL) {
+			float distance = getDistanse(data, parent->center, dimesion);
+			if (distance > parent->radius) {
+				parent->radius = distance;
+				parent = parent->parent;
+			}
+			else {
+				break;
 			}
 		}
-		// °ÑĞÂÔö¼ÓµÄpoint·ÅÈëpageÀïÃæ
-		point p;
+	}
+
+	// å¦‚æœä¸ç”¨åˆ†è£‚
+	if (targetball->datanum < N0) {
+		// æŠŠæ–°å¢åŠ çš„pointæ”¾å…¥pageé‡Œé¢
+		Point p;
 		p.id = ++num;
 		p.data = new float[dimesion];
 		memcpy(p.data, data, sizeof(float) * dimesion);
-		int pos = getBlockPosInPage(target->bid);
-		page[pos + target->datanum++] = p;
+		for (int i = 0; i < BLOCKS_PER_PAGE; ++i) {
+			if (page.blocks[i].bid == targetball->bid) {
+				page.blocks[i].points[targetball->datanum] = p;
+				break;
+			}
+		}
 	} else {
-		// ´´½¨ĞÂµÄpointÊı×éÀ´buildBall
-		point *points = new point[N0 + 1];
+		// åˆ›å»ºæ–°çš„pointæ•°ç»„æ¥buildBall
+		Point *points = new Point[N0 + 1];
 
-		// ½«Ô­À´½ÚµãÉÏµÄpoints·Åµ½ĞÂµÄpointÊı×éÀïÃæ
-		loadBlock(target->bid);
-		memcpy(points, block, SIZE_OF_POINT(dimesion) * N0);
+		// å°†åŸæ¥èŠ‚ç‚¹ä¸Šçš„pointsæ”¾åˆ°æ–°çš„pointæ•°ç»„é‡Œé¢
+		page.loadFromDisk(targetball->pid);
+		loadBlock(targetball);
+		for (int i = 0; i < targetball->datanum; ++i) {
+			points[i].id = block.points[i].id;
+			memcpy(points[i].data, block.points[i].data, sizeof(float) * dimesion);
+		}
 
-		// ÓÃÒª²åÈëµÄdataÀ´´´½¨ĞÂµÄpoint
+		// ç”¨è¦æ’å…¥çš„dataæ¥åˆ›å»ºæ–°çš„point
 		points[N0].id = ++num;
 		points[N0].data = new float[dimesion];
 		memcpy(points[N0].data, data, sizeof(float) * dimesion);
 
-		// ¿ªÊ¼buildBall´´½¨ĞÂµÄ½Úµãtemp
-		ball *temp = NULL;
+		// å¼€å§‹buildBallåˆ›å»ºæ–°çš„èŠ‚ç‚¹temp
+		Ball *temp = NULL;
 		buildBall(temp, N0 + 1, dimesion, points);
-		temp->bid = -1;
+		temp->pid = temp->bid = -1;
 		temp->datanum = -1;
-		temp->leftball->bid = target->bid;  // ·ÖÁÑ³öÀ´µÄ×ó½ÚµãÊ¹ÓÃÔ­Àí½ÚµãµÄblock
-		temp->rightball->bid = numOfBlocks++;  // ·ÖÁÑ³öÀ´µÄÓÒ½ÚµãÒªÔÚËùÒÔblocksºóÃæ×·¼ÓÒ»¸öblock£¨¿ÉÄÜÒª¿ªÒ»ÕÅĞÂµÄpage£©
+		temp->leftball->pid = targetball->pid;
+		temp->leftball->bid = targetball->bid;  // åˆ†è£‚å‡ºæ¥çš„å·¦èŠ‚ç‚¹ä½¿ç”¨åŸç†èŠ‚ç‚¹çš„block
+		temp->rightball->bid = numOfBlocks++;  // åˆ†è£‚å‡ºæ¥çš„å³èŠ‚ç‚¹è¦åœ¨æ‰€ä»¥blocksåé¢è¿½åŠ ä¸€ä¸ªblockï¼ˆå¯èƒ½è¦å¼€ä¸€å¼ æ–°çš„pageï¼‰
+		temp->rightball->pid = numOfBlocks / BLOCKS_PER_PAGE;
 
-		// ½«ĞÂ½ÚµãÓë¸¸½ÚµãÁ¬½ÓÆğÀ´
-		if (target->parent->leftball == target) {
-			target->parent->leftball = temp;
+		// å°†æ–°èŠ‚ç‚¹ä¸çˆ¶èŠ‚ç‚¹è¿æ¥èµ·æ¥
+		if (targetball->parent->leftball == targetball) {
+			targetball->parent->leftball = temp;
 		} else {
-			target->parent->rightball = temp;
+			targetball->parent->rightball = temp;
 		}
 
-		// »ñÈ¡·ÖÁÑºó×óÓÒÁ½¸ö½ÚµãµÄÊı¾İ
+		// è·å–åˆ†è£‚åå·¦å³ä¸¤ä¸ªèŠ‚ç‚¹çš„æ•°æ®
 		auto it = storage.rbegin();
-		point *leftpoints  = it->second;
+		Point *leftpoints  = it->second;
 		++it;
-		point *rightpoints = it->second;
+		Point *rightpoints = it->second;
 
-		// °Ñ×ó½ÚµãµÄÊı¾İ±£´æµ½pageÏàÓ¦µÄblockÖĞ
-		int pos = getBlockPosInPage(temp->leftball->bid);
+		// æŠŠå·¦èŠ‚ç‚¹çš„æ•°æ®ä¿å­˜åˆ°pageç›¸åº”çš„blockä¸­
+		int pos = -1;
+		for (int i = 0; i < BLOCKS_PER_PAGE; ++i) {
+			if (page.blocks[i].bid == temp->leftball->bid) {
+				pos = i;
+				break;
+			}
+		}
 		for (int i = 0; i < temp->leftball->datanum; ++i) {
-			page[pos + i].id = leftpoints[i].id;
-			memcpy(page[pos + i].data, leftpoints[i].data, SIZE_OF_POINT(dimesion));
+			page.blocks[pos].points[i].id = leftpoints[i].id;
+			memcpy(page.blocks[pos].points[i].data, leftpoints[i].data, sizeof(float) * dimesion);
 		}
 
-		// Èç¹ûĞèÒªĞÂ¿ªÒ»Ò³
+		// å¦‚æœéœ€è¦æ–°å¼€ä¸€é¡µ
 		if (numOfBlocks % BLOCKS_PER_PAGE == 0) {
-			// ½«ÓÒ½ÚµãµÄÊı¾İ·Åµ½pageÀïÃæ
+			// å°†å³èŠ‚ç‚¹çš„æ•°æ®æ”¾åˆ°pageé‡Œé¢
+			int pos = 0;
 			for (int i = 0; i < temp->rightball->datanum; ++i) {
-				page[i].id = rightpoints[i].id;
-				memcpy(page[i].data, rightpoints[i].data, SIZE_OF_POINT(dimesion));
+				page.blocks[pos].points[i].id = rightpoints[i].id;
+				memcpy(page.blocks[pos].points[i].data, rightpoints[i].data, sizeof(float) * dimesion);
 			}
-
-			// ½«µ±Ç°Ò³ÖÃ»»Îªpid
-			pid = numOfBlocks / BLOCKS_PER_PAGE;
+			page.pid = numOfBlocks / BLOCKS_PER_PAGE;
 		} else {
-			// ¼ÓÔØ×îºóÒ»ÕÅpage²¢ÇÒ½«ÓÒ½ÚµãµÄÊı¾İ·Åµ½ÀïÃæ
-			loadPage(numOfBlocks / BLOCKS_PER_PAGE);
-			int pos = getBlockPosInPage(temp->rightball->bid);
-			for (int i = 0; i < temp->rightball->datanum; ++i) {
-				page[pos + i].id = rightpoints[i].id;
-				memcpy(page[pos + i].data, rightpoints[i].data, SIZE_OF_POINT(dimesion));
+			// åŠ è½½æœ€åä¸€å¼ pageå¹¶ä¸”å°†å³èŠ‚ç‚¹çš„æ•°æ®æ”¾åˆ°é‡Œé¢
+			page.loadFromDisk(numOfBlocks / BLOCKS_PER_PAGE);
+			int pos = numOfBlocks % BLOCKS_PER_PAGE;
+			for (int i = 0; i < temp->leftball->datanum; ++i) {
+				page.blocks[pos].points[i].id = leftpoints[i].id;
+				memcpy(page.blocks[pos].points[i].data, leftpoints[i].data, sizeof(float) * dimesion);
 			}
 		}
 	}
@@ -372,47 +342,79 @@ bool BallTree::insertData(int d, float* data) {
 }
 
 bool BallTree::deleteData(int d, float* data) {
+	if (data == NULL) {
+		return false;
+	}
+	if (d != dimesion) {
+		return false;
+	}
+
+	// æ‰¾åˆ°è¦åˆ é™¤çš„ç‚¹çš„id
+	int id = mipSearch(d, data);
+	if (id == -1 || targetball == NULL) {
+		return false;
+	}
+
+	// å¦‚æœè¦åˆ é™¤æ•°æ®æ‰€åœ¨çš„å¶å­åªæœ‰å®ƒä¸€ä¸ªæ•°æ®
+	if (targetball->datanum == 1) {
+		page.loadFromDisk(targetball->pid);
+		if (targetball == root) {
+			root->clear();
+		} else if (targetball->parent == root) {
+			if (root->leftball == targetball) {
+				root = root->rightball;
+			} else {
+				root = root->leftball;
+			}
+		} else {
+			Ball *parent, *grandparent;
+			parent = targetball->parent;
+			grandparent = parent->parent;
+			if (grandparent->leftball == parent) {
+				if (parent->leftball == targetball) {
+					grandparent->leftball = parent->rightball;
+				} else {
+					grandparent->leftball = parent->leftball;
+				}
+			}
+			else {
+				if (parent->leftball == targetball) {
+					grandparent->rightball = parent->rightball;
+				} else {
+					grandparent->rightball = parent->leftball;
+				}
+			}
+		}
+		targetball->clear();
+	} else {
+		targetball->datanum--;
+		page.loadFromDisk(targetball->pid);
+		int pos = -1;
+		for (int i = 0; i < BLOCKS_PER_PAGE; ++i) {
+			if (page.blocks[i].bid == targetball->bid) {
+				pos = i;
+				break;
+			}
+		}
+		for (int i = 0; i < N0; ++i) {
+			if (page.blocks[pos].points[i].id == id) {
+				page.blocks[pos].points[i].id = page.blocks[pos].points[targetball->datanum - 1].id;
+				memcpy(page.blocks[pos].points[i].data, page.blocks[pos].points[targetball->datanum - 1].data, sizeof(float) * dimesion);
+				break;
+			}
+		}
+	}
+
 	return true;
 }
 
-//void BallTree::replaceBall(ball *oldBall, ball *newBall) {
-//	if (oldBall == NULL || newBall == NULL) {
-//		return;
-//	}
-//
-//	if (root == oldBall) {
-//		delete root;
-//		root = newBall;
-//		return;
-//	}
-//
-//	traverseAndReplace(root, oldBall, newBall);
-//}
-
-int BallTree::getBlockPosInPage(const int bid) {
-	int pid = bid / BLOCKS_PER_PAGE;
-	int leftBlocksInPages = bid % BLOCKS_PER_PAGE;
-	int pos = leftBlocksInPages * BYTES_PER_BLOCK(dimesion);  // µÚÒ»¸öfloatËùÔÚµÄÎ»ÖÃ
-	return pos;
-}
-
-ball* BallTree::getRoot() {
-	return root;
-}
-
-void BallTree::savePage(int pid) {
-	stringstream stream;
-	stream << pid;
-	string temp;
-	stream >> temp;
-	string fileName = "page" + temp + ".bin";
-	ofstream dataFile;
-	dataFile.open(fileName, ios_base::out | ios_base::binary);
-	if (!dataFile.is_open()) {
-		exit(EXIT_FAILURE);
+void BallTree::loadBlock(Ball *ball) {
+	if (ball == NULL) {
+		return;
 	}
-	for (int i = 0; i < POINTS_PER_PAGE; i++) {
-		dataFile.write((char*)&page[i].id, sizeof 4);
-		dataFile.write((char*)page[i].data, sizeof 4.0f * 50);
+	if (ball->pid == -1 || ball->bid == -1) {
+		return;
 	}
+
+	block.loadFromPage(&page, ball);
 }
