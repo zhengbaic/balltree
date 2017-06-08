@@ -100,9 +100,9 @@ Point* vectorToPoint(vector<Point> v);
 
 float** vectorToFloat(vector<float*> v);
 
-void openF(Ball* root, map<int, Point*> storage, const char* index_path, int dim);
+void openF(Ball* root, map<int, Point*> storage, const char* index_path, int dim, int num);
 
-int readF(Ball* &root, const char* index_path, int &dim);
+int readF(Ball* &root, const char* index_path, int &dim, int &num);
 
 float getMax(int d, float* query, Ball* Root);
 
@@ -115,5 +115,7 @@ void displayCenter(float* f, int d);
 float getLength(int d, float* query);
 
 float getInnerproduct(int d, float * query, float * vec);
+
+void saveIndex(const char* index_path, Ball* root, int dim, int num);
 
 #endif

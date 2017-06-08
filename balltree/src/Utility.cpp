@@ -212,7 +212,7 @@ float getDistanse(float* a, float *b, int d) {
 	for (int i = 0; i < d; i++) {
 		r += pow(a[i] - b[i], 2);
 	}
-	return r;
+	return sqrtf(r);
 }
 
 void analyse(Ball *node, int n, int d, float **data) {
@@ -233,7 +233,7 @@ void analyse(Ball *node, int n, int d, float **data) {
 		r = max(r, getDistanse(mean, data[i], d));
 	}
 
-	node->radius = sqrt(r);
+	node->radius = r;
 }
 
 void quadAnalyse(Quadball *node, int n, int d, float **data) {
@@ -324,14 +324,46 @@ float** vectorToFloat(vector<float*> v) {
 	return res;
 }
 
-void openF(Ball* root, map<int, Point*> storage, const char* index_path, int dim) {
-	int testCount = 0;
-
+void saveIndex(const char* index_path, Ball* root, int dim, int num) {
 	// 索引树文件
-	ofstream outFile;
-	string tempFileName = index_path;
-	tempFileName += "/index.bin";
-	outFile.open(tempFileName, ios_base::out | ios_base::binary);
+	ofstream indexFile;
+	string indexPath = index_path;
+	string indexFileName = indexPath + "/index.bin";
+	indexFile.open(indexFileName.c_str(), ios_base::out | ios_base::binary);
+
+	// 输出数据
+	indexFile.write((char*)&dim, sizeof 4);
+	indexFile.write((char*)&num, sizeof 4);
+	stack<Ball*> Stack;
+	while (root || !Stack.empty()) {
+		while (root) {
+			Stack.push(root);
+			indexFile.write((char*)&root->pid, sizeof 4);
+			indexFile.write((char*)&root->bid, sizeof 4);
+			indexFile.write((char*)&root->offset, sizeof 4);
+			indexFile.write((char*)root->center, sizeof 4.0f * 50);
+			indexFile.write((char*)&root->radius, sizeof 4.0f);
+			indexFile.write((char*)&root->datanum, sizeof 4);
+			indexFile.write((char*)&root->leftball, sizeof 4);
+			indexFile.write((char*)&root->rightball, sizeof 4);
+			indexFile.write((char*)&root->parent, sizeof 4);
+			root = root->leftball;
+		}
+		root = Stack.top();
+		Stack.pop();
+		root = root->rightball;
+	}
+
+	// 关闭文件
+	indexFile.close();
+}
+
+void openF(Ball* root, map<int, Point*> storage, const char* index_path, int dim, int num) {
+	// 索引树文件
+	ofstream indexFile;
+	string indexPath = index_path;
+	string indexFileName = indexPath + "/index.bin";
+	indexFile.open(indexFileName.c_str(), ios_base::out | ios_base::binary);
 
 	// 数据文件
 	ofstream dataFile;
@@ -343,7 +375,7 @@ void openF(Ball* root, map<int, Point*> storage, const char* index_path, int dim
 	string temp;
 	stream >> temp;
 	string fileName = "/page" + temp + ".bin";
-	tempFileName = index_path;
+	string tempFileName = index_path;
 	tempFileName += fileName;
 	dataFile.open(tempFileName, ios_base::out | ios_base::binary);
 
@@ -355,30 +387,33 @@ void openF(Ball* root, map<int, Point*> storage, const char* index_path, int dim
 		zeroPoint[i] = 0.0f;
 	}
 
-	if (!outFile.is_open() || !dataFile.is_open()) {
-		exit(EXIT_FAILURE);
-	}
-	outFile.write((char*)&dim, sizeof 4);
+	// 输出数据
+	indexFile.write((char*)&dim, sizeof 4);
+	indexFile.write((char*)&num, sizeof 4);
 	stack<Ball*> Stack;
 	while (root || !Stack.empty()) {
-
 		while (root) {
 			Stack.push(root);
-			outFile.write((char*)&pageId, sizeof 4);
-			outFile.write((char*)&root->bid, sizeof 4);
-			outFile.write((char*)&root->offset, sizeof 4);
-			outFile.write((char*)root->center, sizeof 4.0f * 50);
-			outFile.write((char*)&root->radius, sizeof 4.0f);
-			outFile.write((char*)&root->datanum, sizeof 4);
-			outFile.write((char*)&root->leftball, sizeof 4);
-			outFile.write((char*)&root->rightball, sizeof 4);
-			outFile.write((char*)&root->parent, sizeof 4);
+			indexFile.write((char*)&pageId, sizeof 4);
+			indexFile.write((char*)&root->bid, sizeof 4);
+			indexFile.write((char*)&root->offset, sizeof 4);
+			indexFile.write((char*)root->center, sizeof 4.0f * 50);
+			indexFile.write((char*)&root->radius, sizeof 4.0f);
+			indexFile.write((char*)&root->datanum, sizeof 4);
+			indexFile.write((char*)&root->leftball, sizeof 4);
+			indexFile.write((char*)&root->rightball, sizeof 4);
+			indexFile.write((char*)&root->parent, sizeof 4);
 
 			// 如果是叶子结点则写入硬盘中
 			if (root->leftball == NULL && root->rightball == NULL) {
 				count++;  // 给每一页的数据块计数，一页的数据块不超过16个
-						  // 分页并初始化
+
+			    // 分页并初始化
 				if (count >= 16) {
+					// 补满65536个字节
+					for (int i = 0; i < 64; i++) {
+						dataFile.write((char*)&zeroIndex, sizeof 4);
+					}
 					dataFile.close();
 					dataFile.clear();
 					count = 0;
@@ -405,6 +440,7 @@ void openF(Ball* root, map<int, Point*> storage, const char* index_path, int dim
 						dataFile.write((char*)mapIter->second[i].data, sizeof 4.0f * 50);
 					}
 
+					// 用0补满
 					for (int i = 0; i < 20 - root->datanum; i++) {
 						dataFile.write((char*)&zeroIndex, sizeof zeroIndex);
 						dataFile.write((char*)zeroPoint, sizeof 4.0f * 50);
@@ -418,11 +454,13 @@ void openF(Ball* root, map<int, Point*> storage, const char* index_path, int dim
 		Stack.pop();
 		root = root->rightball;
 	}
-	outFile.close();
+
+	// 关闭文件
+	indexFile.close();
 	dataFile.close();
 }
 
-int readF(Ball* &root, const char* index_path, int &dim) {
+int readF(Ball* &root, const char* index_path, int &dim, int &num) {
 	ifstream inFile;
 	int numOfBlock = 0;
 	string tempFileName = index_path;
@@ -432,6 +470,7 @@ int readF(Ball* &root, const char* index_path, int &dim) {
 		exit(EXIT_FAILURE);
 	}
 	inFile.read((char*)&dim, sizeof 4);
+	inFile.read((char*)&num, sizeof 4);
 	root = new Ball();
 	root->center = new float[50];
 	inFile.read((char*)&root->pid, sizeof 4);
@@ -443,6 +482,9 @@ int readF(Ball* &root, const char* index_path, int &dim) {
 	inFile.read((char*)&root->leftball, sizeof 4);
 	inFile.read((char*)&root->rightball, sizeof 4);
 	inFile.read((char*)&root->parent, sizeof 4);
+	if (root->datanum != -1) {
+		numOfBlock++;
+	}
 
 	Ball *head = root;
 	stack<Ball*> Stack;
@@ -452,8 +494,6 @@ int readF(Ball* &root, const char* index_path, int &dim) {
 
 		while (root) {
 			Stack.push(root);
-			// 计数blockNum
-			numOfBlock++;
 			if (flag) {
 				root->center = new float[50];
 				inFile.read((char*)&root->pid, sizeof 4);
@@ -465,6 +505,9 @@ int readF(Ball* &root, const char* index_path, int &dim) {
 				inFile.read((char*)&root->leftball, sizeof 4);
 				inFile.read((char*)&root->rightball, sizeof 4);
 				inFile.read((char*)&root->parent, sizeof 4);
+				if (root->datanum != -1) {
+					numOfBlock++;
+				}
 			}
 			else {
 				flag = true;

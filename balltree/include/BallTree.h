@@ -21,6 +21,7 @@ private:
 	Quadball *quadroot;
 	string index_path;
 	map<int, Page> pages;
+	set<int> dirtyPages;
 public:
 	BallTree();
 
@@ -47,6 +48,10 @@ public:
 	// 搜索，并且返回查询向量的id
 	// @author zhijian
 	int mipSearch(int d, float* query);
+
+	// 线性搜索（性能对比用），并且返回查询向量的id
+	// @author zhijian
+	int linearSearch(int d, float* query);
 
 	// @author 123zzj123
 	float eval(int d, float* query, float Max, Ball* Root);
