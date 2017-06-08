@@ -15,22 +15,22 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="BallTree.cpp">
+    <ClCompile Include="src\BallTree.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="test.cpp">
+    <ClCompile Include="src\test.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="Utility.cpp">
+    <ClCompile Include="src\Utility.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="BallTree.h">
-      <Filter>源文件</Filter>
+    <ClInclude Include="include\BallTree.h">
+      <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="Utility.h">
-      <Filter>源文件</Filter>
+    <ClInclude Include="include\Utility.h">
+      <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

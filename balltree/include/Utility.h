@@ -23,12 +23,12 @@ struct Ball {
 	Ball* leftball;
 	Ball* rightball;
 	int bid;
-	int pid;  // ¶ÔÓ¦µÄÊı¾İ¿éÔÚÄÄÒ»Ò³
-	int offset;  // ¶ÔÓ¦µÄÊı¾İ¿âÔÚÒ³ÖĞµÄµÚ¼¸¿é
+	int pid;  // å¯¹åº”çš„æ•°æ®å—åœ¨å“ªä¸€é¡µ
+	int offset;  // å¯¹åº”çš„æ•°æ®åº“åœ¨é¡µä¸­çš„ç¬¬å‡ å—
 	int datanum;
 	float* center;
 	float radius;
-	// ³ÉÔ±º¯Êı
+	// æˆå‘˜å‡½æ•°
 	Ball();
 	~Ball();
 	void removeRecursively(Ball * ball);
@@ -42,7 +42,7 @@ struct Quadball {
 	Quadball* ball4;
 	float* center;
 	float radius;
-	// ³ÉÔ±º¯Êı
+	// æˆå‘˜å‡½æ•°
 	Quadball();
 	~Quadball();
 	void removeRecursively(Quadball *ball);
@@ -52,25 +52,25 @@ struct Quadball {
 struct Point {
 	int id;
 	float *data;
-	// ³ÉÔ±º¯Êı
+	// æˆå‘˜å‡½æ•°
 	Point();
 	~Point();
 	void clear();
 };
 
 struct Block {
-	// ³ÉÔ±±äÁ¿
+	// æˆå‘˜å˜é‡
 	Point *points;
-	// ³ÉÔ±º¯Êı
+	// æˆå‘˜å‡½æ•°
 	Block();
 	~Block();
 	void clear();
 };
 
 struct Page {
-	// ³ÉÔ±±äÁ¿
+	// æˆå‘˜å˜é‡
 	Block *blocks;
-	// ³ÉÔ±º¯Êı
+	// æˆå‘˜å‡½æ•°
 	Page();
 	~Page();
 	void clear();

@@ -1,4 +1,4 @@
-#include "Utility.h"
+#include "../include/Utility.h"
 
 int DIMENSION;
 int SIZE_OF_POINT;
@@ -35,7 +35,7 @@ void Ball::removeRecursively(Ball *ball) {
 }
 
 void Ball::clear() {
-	// Ê¹¸¸½ÚµãÖ¸ÏòNULL
+	// ä½¿çˆ¶èŠ‚ç‚¹æŒ‡å‘NULL
 	if (parent != NULL) {
 		if (parent->leftball == this) {
 			parent->leftball = NULL;
@@ -45,7 +45,7 @@ void Ball::clear() {
 		}
 	}
 
-	// µİ¹éÉ¾³ı×Ó½Úµã
+	// é€’å½’åˆ é™¤å­èŠ‚ç‚¹
 	removeRecursively(this);
 }
 
@@ -276,7 +276,7 @@ void findFurestPoints(float** data, int n, int d, set<float*> s) {
 	}
 }
 
-void split(int n, int d, float* &a, float* &b, float** data) {
+void split(int n , int d, float* &a, float* &b, float** data) {
 	float* randomPoint = data[0];
 	a = new float[d] {.0f};
 	b = new float[d] {.0f};
@@ -327,17 +327,17 @@ float** vectorToFloat(vector<float*> v) {
 void openF(Ball* root, map<int, Point*> storage, const char* index_path, int dim) {
 	int testCount = 0;
 
-	// Ë÷ÒıÊ÷ÎÄ¼ş
+	// ç´¢å¼•æ ‘æ–‡ä»¶
 	ofstream outFile;
 	string tempFileName = index_path;
 	tempFileName += "/index.bin";
 	outFile.open(tempFileName, ios_base::out | ios_base::binary);
 
-	// Êı¾İÎÄ¼ş
+	// æ•°æ®æ–‡ä»¶
 	ofstream dataFile;
 	map<int, Point*>::iterator mapIter;
-	int pageId = 0;							// Ò³ºÅ
-	int count = -1;							// Ã¿Ò³µÄÊıÁ¿
+	int pageId = 0;							// é¡µå·
+	int count = -1;							// æ¯é¡µçš„æ•°é‡
 	stringstream stream;
 	stream << pageId;
 	string temp;
@@ -347,7 +347,7 @@ void openF(Ball* root, map<int, Point*> storage, const char* index_path, int dim
 	tempFileName += fileName;
 	dataFile.open(tempFileName, ios_base::out | ios_base::binary);
 
-	// ×öÒ»¸öµãÌî²¹¿ÕÏî
+	// åšä¸€ä¸ªç‚¹å¡«è¡¥ç©ºé¡¹
 	int zeroIndex = -1;
 	float *zeroPoint = NULL;
 	zeroPoint = new float[50];
@@ -374,10 +374,10 @@ void openF(Ball* root, map<int, Point*> storage, const char* index_path, int dim
 			outFile.write((char*)&root->rightball, sizeof 4);
 			outFile.write((char*)&root->parent, sizeof 4);
 
-			// Èç¹ûÊÇÒ¶×Ó½áµãÔòĞ´ÈëÓ²ÅÌÖĞ
+			// å¦‚æœæ˜¯å¶å­ç»“ç‚¹åˆ™å†™å…¥ç¡¬ç›˜ä¸­
 			if (root->leftball == NULL && root->rightball == NULL) {
-				count++;  // ¸øÃ¿Ò»Ò³µÄÊı¾İ¿é¼ÆÊı£¬Ò»Ò³µÄÊı¾İ¿é²»³¬¹ı16¸ö
-						  // ·ÖÒ³²¢³õÊ¼»¯
+				count++;  // ç»™æ¯ä¸€é¡µçš„æ•°æ®å—è®¡æ•°ï¼Œä¸€é¡µçš„æ•°æ®å—ä¸è¶…è¿‡16ä¸ª
+						  // åˆ†é¡µå¹¶åˆå§‹åŒ–
 				if (count >= 16) {
 					dataFile.close();
 					dataFile.clear();
@@ -397,23 +397,12 @@ void openF(Ball* root, map<int, Point*> storage, const char* index_path, int dim
 				}
 				root->pid = pageId;
 
-				// Êı¾İĞ´ÈëÓ²ÅÌ£¬²»¹»Î»µÄÓÃ0µãÌî²¹
+				// æ•°æ®å†™å…¥ç¡¬ç›˜ï¼Œä¸å¤Ÿä½çš„ç”¨0ç‚¹å¡«è¡¥
 				mapIter = storage.find(root->bid);
 				if (mapIter != storage.end()) {
-					// dataFile.write((char*)&root->bid, sizeof 4);
 					for (int i = 0; i < root->datanum; i++) {
 						dataFile.write((char*)&mapIter->second[i].id, sizeof 4);
 						dataFile.write((char*)mapIter->second[i].data, sizeof 4.0f * 50);
-						// ²âÊÔ
-						/*testCount++;
-						if (testCount <= 300) {
-						cout << "index: " << mapIter->second[i].id << endl;
-						cout << "point: [";
-						for (int j = 0; j < 50; j++) {
-						cout << mapIter->second[i].data[j] << " ";
-						}
-						cout << "]" << endl;
-						}*/
 					}
 
 					for (int i = 0; i < 20 - root->datanum; i++) {
@@ -459,14 +448,11 @@ int readF(Ball* &root, const char* index_path, int &dim) {
 	stack<Ball*> Stack;
 	bool flag = false;
 
-	// ²âÊÔ
-	int countTimes = 0;
-
 	while (root || !Stack.empty()) {
 
 		while (root) {
 			Stack.push(root);
-			// ¼ÆÊıblockNum
+			// è®¡æ•°blockNum
 			numOfBlock++;
 			if (flag) {
 				root->center = new float[50];
@@ -482,11 +468,6 @@ int readF(Ball* &root, const char* index_path, int &dim) {
 			}
 			else {
 				flag = true;
-			}
-			// ²âÊÔ
-			if (countTimes < 100) {
-				countTimes++;
-				cout << root->radius << endl;
 			}
 
 			if (root->leftball != NULL) {
@@ -520,35 +501,6 @@ int readF(Ball* &root, const char* index_path, int &dim) {
 	root = head;
 	inFile.close();
 
-	/*ifstream dataFile;
-	tempFileName = index_path;
-	tempFileName += "page0.bin";
-	dataFile.open(tempFileName, ios_base::in | ios_base::binary);
-	if (!dataFile.is_open()) {
-	exit(EXIT_FAILURE);
-	}
-
-	cout << endl << endl << endl << endl;
-	int count = 300;
-	while (count--) {
-	int index = 0;
-	dataFile.read((char*)&index, sizeof 4);
-	cout << "index: " << index << endl;
-	float *point = new float[50];
-	dataFile.read((char*)point, sizeof 4.0f * 50);
-	if (point == NULL) {
-	cout << "´Ë´¦ÊÇÁãµã" << endl;
-	}
-	else {
-	cout << "point: ";
-	for (int i = 0; i < 50; i++) {
-	cout << point[i] << " ";
-	}
-	cout << endl;
-	}
-	}
-	dataFile.close();*/
-
 	return numOfBlock;
 }
 
@@ -567,7 +519,7 @@ void output(Ball* root) {
 		while (root) {
 			Stack.push(root);
 			//cout << root->bid << " ";
-			cout << "Ô²ĞÄ£º [";
+			cout << "åœ†å¿ƒï¼š [";
 			for (int i = 0; i < 50; i++) {
 				printf("%f ,", root->center[i]);
 			}
@@ -590,7 +542,7 @@ void outputfloat2(float** f, int n, int d) {
 }
 
 void displayCenter(float* f, int d) {
-	cout << "Ô²ĞÄ£º[";
+	cout << "åœ†å¿ƒï¼š[";
 	for (int i = 0; i < d; i++) {
 		printf("%f ,", f[i]);
 	}

@@ -1,19 +1,13 @@
 #include <iostream>
 
-#include "BallTree.h"
-#include "Utility.h"
+#include "../include/BallTree.h"
+#include "../include/Utility.h"
 
 #define MNIST
 
 #ifdef MNIST
-char dataset[L] = "Mnist";
+char dataset[L] = "data/Mnist";
 int n = 60000, d = 50;
-int qn = 1000;
-#endif
-
-#ifdef YAHOO
-char dataset[L] = "Yahoo";
-int n = 624, d = 300;
 int qn = 1000;
 #endif
 
@@ -32,9 +26,9 @@ int main() {
 		return 1;
 	}
 
-	//BallTree ball_tree1;
-	//ball_tree1.buildTree(n, d, data);
-	//ball_tree1.storeTree(index_path);
+	BallTree ball_tree1;
+	ball_tree1.buildTree(n, d, data);
+	ball_tree1.storeTree(index_path);
 
 	if (!read_data(qn, d, query, query_path));
 	FILE* fout = fopen(output_path, "w");
@@ -45,13 +39,16 @@ int main() {
 
 	BallTree ball_tree2;
 	ball_tree2.restoreTree(index_path);
-	for (int i = 0; i < qn; i++) {
-		int index = ball_tree2.mipSearch(d, query[i]);
-		fprintf(fout, "%d\n", index);
-		printf("QUERY #%d: %d\n", i, index);
-	}
+	//printf("Querying ...\n");
+	//for (int i = 0; i < qn; i++) {
+	//	int index = ball_tree2.mipSearch(d, query[i]);
+	//	fprintf(fout, "%d\n", index);
+	//}
+	//printf("Querying completed!\n");
 
 	//fclose(fout);
+
+	ball_tree2.insertData(d, data[0]);
 
 	//for (int i = 0; i < n; i++) {
 	//	delete[] data[i];

@@ -11,11 +11,11 @@ using namespace std;
 
 class BallTree {
 private:
-	int dimesion;  //Î¬¶È
-	int num;  // ¼ÇÂ¼µÄ×ÜÊıÁ¿
-	int numOfBlocks;  // ÓÃÓÚÉú³ÉĞÂµÄBlock
+	int dimesion;  //ç»´åº¦
+	int num;  // è®°å½•çš„æ€»æ•°é‡
+	int numOfBlocks;  // ç”¨äºç”Ÿæˆæ–°çš„Block
 	int targetid;
-	static int PAGES_LIMIT;  // ×î¶àÖ»ÄÜ¼ÓÔØ¶àÉÙÒ³µ½ÄÚ´æÖĞ
+	static int PAGES_LIMIT;  // æœ€å¤šåªèƒ½åŠ è½½å¤šå°‘é¡µåˆ°å†…å­˜ä¸­
 	Ball *root;
 	Ball *tb;
 	Quadball *quadroot;
@@ -44,7 +44,7 @@ public:
 	// @author sysuzzy
 	bool restoreTree(const char* index_path);
 
-	// ËÑË÷£¬²¢ÇÒ·µ»Ø²éÑ¯ÏòÁ¿µÄid
+	// æœç´¢ï¼Œå¹¶ä¸”è¿”å›æŸ¥è¯¢å‘é‡çš„id
 	// @author zhijian
 	int mipSearch(int d, float* query);
 
@@ -57,11 +57,11 @@ public:
 	// @author painterdrown
 	bool deleteData(int d, float* data);
 
-	// °´Ê÷µÄ²ã´Î±éÀú²¢ÇÒÊä³ö
+	// æŒ‰æ ‘çš„å±‚æ¬¡éå†å¹¶ä¸”è¾“å‡º
 	// @author painterdrown
 	void displayTree();
 
-	// ¸ù¾İbid¼ÓÔØÏàÓ¦µÄÊı¾İµ½Ë½ÓĞ³ÉÔ±blockÖĞ
+	// æ ¹æ®bidåŠ è½½ç›¸åº”çš„æ•°æ®åˆ°ç§æœ‰æˆå‘˜blockä¸­
 	// @author painterdrown
 	void preparePage(const int pid);
 
