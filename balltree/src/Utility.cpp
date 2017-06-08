@@ -379,6 +379,9 @@ void openF(Ball* root, map<int, Point*> storage, const char* index_path, int dim
 				count++;  // 给每一页的数据块计数，一页的数据块不超过16个
 						  // 分页并初始化
 				if (count >= 16) {
+					for (int i = 0; i < 64; i++) {
+						dataFile.write((char*)&zeroIndex, sizeof 4);
+					}
 					dataFile.close();
 					dataFile.clear();
 					count = 0;
@@ -418,6 +421,7 @@ void openF(Ball* root, map<int, Point*> storage, const char* index_path, int dim
 		Stack.pop();
 		root = root->rightball;
 	}
+
 	outFile.close();
 	dataFile.close();
 }
