@@ -5,6 +5,100 @@ int SIZE_OF_POINT;
 int BYTES_PER_BLOCK;
 int BLOCKS_PER_PAGE;
 
+// =========== Ball Struct ===========
+
+Ball::Ball() {
+	parent = leftball = rightball = NULL;
+	center = NULL;
+	datanum = -1;
+	radius = 0;
+	bid = pid = offset = -1;
+}
+
+Ball::~Ball() {
+	// clear();
+}
+
+void Ball::removeRecursively(Ball *ball) {
+	if (ball == NULL) {
+		return;
+	}
+
+	ball->datanum = -1;
+	ball->radius = 0;
+	ball->bid = ball->pid = ball->offset = -1;
+	if (ball->center != NULL) {
+		delete[] ball->center;
+	}
+	removeRecursively(ball->leftball);
+	removeRecursively(ball->rightball);
+}
+
+void Ball::clear() {
+	// 使父节点指向NULL
+	if (parent != NULL) {
+		if (parent->leftball == this) {
+			parent->leftball = NULL;
+		}
+		else {
+			parent->rightball = NULL;
+		}
+	}
+
+	// 递归删除子节点
+	removeRecursively(this);
+}
+
+// =========== Point Struct ===========
+
+Point::Point() {
+	id = -1;
+	data = NULL;
+	data = new float[DIMENSION];
+}
+
+Point::~Point() {
+	// clear();
+}
+
+void Point::clear() {
+	id = -1;
+	if (data != NULL) {
+		delete[] data;
+	}
+}
+
+// =========== Block Struct ===========
+
+Quadball::Quadball() {
+	radius = -1;
+	center = NULL;
+	ball1 = ball2 = ball3 = ball4 = NULL;
+}
+
+Quadball::~Quadball() {
+	// clear();
+}
+
+void Quadball::removeRecursively(Quadball *ball) {
+	if (ball == NULL) {
+		return;
+	}
+
+	ball->radius = -1;
+	if (ball->center != NULL) {
+		delete[] ball->center;
+	}
+	removeRecursively(ball->ball1);
+	removeRecursively(ball->ball2);
+	removeRecursively(ball->ball3);
+	removeRecursively(ball->ball4);
+}
+
+void Quadball::clear() {
+	removeRecursively(this);
+}
+
 // =========== Block Struct ===========
 
 Block::Block() {
@@ -182,7 +276,7 @@ void findFurestPoints(float** data, int n, int d, set<float*> s) {
 	}
 }
 
-void split(int n , int d, float* &a, float* &b, float** data) {
+void split(int n, int d, float* &a, float* &b, float** data) {
 	float* randomPoint = data[0];
 	a = new float[d] {.0f};
 	b = new float[d] {.0f};
@@ -232,18 +326,18 @@ float** vectorToFloat(vector<float*> v) {
 
 void openF(Ball* root, map<int, Point*> storage, const char* index_path, int dim) {
 	int testCount = 0;
-	
+
 	// 索引树文件
 	ofstream outFile;
 	string tempFileName = index_path;
 	tempFileName += "/index.bin";
 	outFile.open(tempFileName, ios_base::out | ios_base::binary);
-	
+
 	// 数据文件
 	ofstream dataFile;
 	map<int, Point*>::iterator mapIter;
 	int pageId = 0;							// 页号
-	int count = 0;							// 每页的数量
+	int count = -1;							// 每页的数量
 	stringstream stream;
 	stream << pageId;
 	string temp;
@@ -272,17 +366,18 @@ void openF(Ball* root, map<int, Point*> storage, const char* index_path, int dim
 			Stack.push(root);
 			outFile.write((char*)&pageId, sizeof 4);
 			outFile.write((char*)&root->bid, sizeof 4);
+			outFile.write((char*)&root->offset, sizeof 4);
 			outFile.write((char*)root->center, sizeof 4.0f * 50);
 			outFile.write((char*)&root->radius, sizeof 4.0f);
 			outFile.write((char*)&root->datanum, sizeof 4);
 			outFile.write((char*)&root->leftball, sizeof 4);
 			outFile.write((char*)&root->rightball, sizeof 4);
 			outFile.write((char*)&root->parent, sizeof 4);
-			
+
 			// 如果是叶子结点则写入硬盘中
 			if (root->leftball == NULL && root->rightball == NULL) {
 				count++;  // 给每一页的数据块计数，一页的数据块不超过16个
-				// 分页并初始化
+						  // 分页并初始化
 				if (count >= 16) {
 					dataFile.close();
 					dataFile.clear();
@@ -305,19 +400,19 @@ void openF(Ball* root, map<int, Point*> storage, const char* index_path, int dim
 				// 数据写入硬盘，不够位的用0点填补
 				mapIter = storage.find(root->bid);
 				if (mapIter != storage.end()) {
-					dataFile.write((char*)&root->bid, sizeof 4);
+					// dataFile.write((char*)&root->bid, sizeof 4);
 					for (int i = 0; i < root->datanum; i++) {
 						dataFile.write((char*)&mapIter->second[i].id, sizeof 4);
 						dataFile.write((char*)mapIter->second[i].data, sizeof 4.0f * 50);
 						// 测试
 						/*testCount++;
 						if (testCount <= 300) {
-							cout << "index: " << mapIter->second[i].id << endl;
-							cout << "point: [";
-							for (int j = 0; j < 50; j++) {
-								cout << mapIter->second[i].data[j] << " ";
-							}
-							cout << "]" << endl;
+						cout << "index: " << mapIter->second[i].id << endl;
+						cout << "point: [";
+						for (int j = 0; j < 50; j++) {
+						cout << mapIter->second[i].data[j] << " ";
+						}
+						cout << "]" << endl;
 						}*/
 					}
 
@@ -352,6 +447,7 @@ int readF(Ball* &root, const char* index_path, int &dim) {
 	root->center = new float[50];
 	inFile.read((char*)&root->pid, sizeof 4);
 	inFile.read((char*)&root->bid, sizeof 4);
+	inFile.read((char*)&root->offset, sizeof 4);
 	inFile.read((char*)root->center, sizeof 4.0f * 50);
 	inFile.read((char*)&root->radius, sizeof 4.0f);
 	inFile.read((char*)&root->datanum, sizeof 4);
@@ -376,6 +472,7 @@ int readF(Ball* &root, const char* index_path, int &dim) {
 				root->center = new float[50];
 				inFile.read((char*)&root->pid, sizeof 4);
 				inFile.read((char*)&root->bid, sizeof 4);
+				inFile.read((char*)&root->offset, sizeof 4);
 				inFile.read((char*)root->center, sizeof 4.0f * 50);
 				inFile.read((char*)&root->radius, sizeof 4.0f);
 				inFile.read((char*)&root->datanum, sizeof 4);
@@ -391,7 +488,7 @@ int readF(Ball* &root, const char* index_path, int &dim) {
 				countTimes++;
 				cout << root->radius << endl;
 			}
-			
+
 			if (root->leftball != NULL) {
 				root->leftball = new Ball();
 				if (root == head) {
@@ -428,28 +525,27 @@ int readF(Ball* &root, const char* index_path, int &dim) {
 	tempFileName += "page0.bin";
 	dataFile.open(tempFileName, ios_base::in | ios_base::binary);
 	if (!dataFile.is_open()) {
-		exit(EXIT_FAILURE);
+	exit(EXIT_FAILURE);
 	}
-	
 
 	cout << endl << endl << endl << endl;
 	int count = 300;
 	while (count--) {
-		int index = 0;
-		dataFile.read((char*)&index, sizeof 4);
-		cout << "index: " << index << endl;
-		float *point = new float[50];
-		dataFile.read((char*)point, sizeof 4.0f * 50);
-		if (point == NULL) {
-			cout << "此处是零点" << endl;
-		}
-		else {
-			cout << "point: ";
-			for (int i = 0; i < 50; i++) {
-				cout << point[i] << " ";
-			}
-			cout << endl;
-		}
+	int index = 0;
+	dataFile.read((char*)&index, sizeof 4);
+	cout << "index: " << index << endl;
+	float *point = new float[50];
+	dataFile.read((char*)point, sizeof 4.0f * 50);
+	if (point == NULL) {
+	cout << "此处是零点" << endl;
+	}
+	else {
+	cout << "point: ";
+	for (int i = 0; i < 50; i++) {
+	cout << point[i] << " ";
+	}
+	cout << endl;
+	}
 	}
 	dataFile.close();*/
 
@@ -470,7 +566,7 @@ void output(Ball* root) {
 	while (root || !Stack.empty()) {
 		while (root) {
 			Stack.push(root);
-			cout << root->bid << " ";
+			//cout << root->bid << " ";
 			cout << "圆心： [";
 			for (int i = 0; i < 50; i++) {
 				printf("%f ,", root->center[i]);

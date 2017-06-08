@@ -14,7 +14,7 @@
 #include <string>
 using namespace std;
 
-#define L                     20
+#define L                     256
 #define N0                    20
 #define BYTES_PER_PAGE        65536
 
@@ -22,51 +22,17 @@ struct Ball {
 	Ball* parent;
 	Ball* leftball;
 	Ball* rightball;
+	int bid;
 	int pid;  // 对应的数据块在哪一页
 	int offset;  // 对应的数据库在页中的第几块
 	int datanum;
 	float* center;
 	float radius;
-
-	Ball() {
-		parent = leftball = rightball = NULL;
-		center = NULL;
-		datanum = -1;
-		radius = 0;
-		pid = offset = -1;
-	}
-
-	~Ball() {
-		// clear();
-	}
-	void removeRecursively(Ball *ball) {
-		if (ball == NULL) {
-			return;
-		}
-
-		ball->datanum = -1;
-		ball->radius = 0;
-		ball->pid = ball->offset = -1;
-		if (ball->center != NULL) {
-			delete[] ball->center;
-		}
-		removeRecursively(ball->leftball);
-		removeRecursively(ball->rightball);
-	}
-
-	void clear() {
-		// 使父节点指向NULL
-		if (parent != NULL) {
-			if (parent->leftball == this) {
-				parent->leftball = NULL;
-			} else {
-				parent->rightball = NULL;
-			}
-		}
-
-		// 递归删除子节点
-		removeRecursively(this);
-	}
+	// 成员函数
+	Ball();
+	~Ball();
+	void removeRecursively(Ball * ball);
+	void clear();
 };
 
 struct Quadball {
@@ -76,57 +42,20 @@ struct Quadball {
 	Quadball* ball4;
 	float* center;
 	float radius;
-
-	Quadball() {
-		radius = -1;
-		center = NULL;
-		ball1 = ball2 = ball3 = ball4 = NULL;
-	}
-
-	~Quadball() {
-		// clear();
-	}
-
-	void removeRecursively(Quadball *ball) {
-		if (ball == NULL) {
-			return;
-		}
-
-		ball->radius = -1;
-		if (ball->center != NULL) {
-			delete[] ball->center;
-		}
-		removeRecursively(ball->ball1);
-		removeRecursively(ball->ball2);
-		removeRecursively(ball->ball3);
-		removeRecursively(ball->ball4);
-	}
-
-	void clear() {
-		removeRecursively(this);
-	}
+	// 成员函数
+	Quadball();
+	~Quadball();
+	void removeRecursively(Quadball *ball);
+	void clear();
 };
 
 struct Point {
 	int id;
 	float *data;
-
-	Point() {
-		id = -1;
-		data = NULL;
-		data = new float[DIMENSION];
-	}
-
-	~Point() {
-		// clear();
-	}
-
-	void clear() {
-		id = -1;
-		if (data != NULL) {
-			delete[] data;
-		}
-	}
+	// 成员函数
+	Point();
+	~Point();
+	void clear();
 };
 
 struct Block {

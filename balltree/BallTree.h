@@ -17,7 +17,7 @@ private:
 	int targetid;
 	static int PAGES_LIMIT;  // 最多只能加载多少页到内存中
 	Ball *root;
-	Ball *targetball;
+	Ball *tb;
 	Quadball *quadroot;
 	string index_path;
 	map<int, Page> pages;
@@ -63,7 +63,7 @@ public:
 
 	// 根据bid加载相应的数据到私有成员block中
 	// @author painterdrown
-	void loadBlock(const int pid, const int offset);
+	void preparePage(const int pid);
 
 	// @author painterdrown
 	void setPagesLimit(const int limit);
